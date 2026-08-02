@@ -1,6 +1,6 @@
 export const themes = [
   {
-    id: 1,
+    id: "ai-infrastructure",
     name: "AI Infrastructure",
     score: 94,
     description:
@@ -13,7 +13,7 @@ export const themes = [
     ],
   },
   {
-    id: 2,
+    id: "industrial-recovery",
     name: "Industrial Recovery",
     score: 88,
     description:
@@ -26,7 +26,7 @@ export const themes = [
     ],
   },
   {
-    id: 3,
+    id: "power-grid",
     name: "Power Grid",
     score: 85,
     description:

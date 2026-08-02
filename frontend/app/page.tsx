@@ -155,6 +155,7 @@ export default function Home() {
                 {themes.map((theme) => (
                   <ThemeCard
                     key={theme.id}
+                    id={theme.id}
                     name={theme.name}
                     score={theme.score}
                     description={theme.description}

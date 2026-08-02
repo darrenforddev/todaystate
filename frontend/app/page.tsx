@@ -68,7 +68,12 @@ export default function Home() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.25fr_2fr_1fr]">
-          <BullBearCard />
+          <BullBearCard
+  probability={78}
+  marketState="Bull Market"
+  confidence="High"
+  risk="Moderate"
+/>
           <section className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               {marketSignals.map((signal) => (

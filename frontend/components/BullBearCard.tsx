@@ -1,4 +1,16 @@
-export default function BullBearCard() {
+type BullBearCardProps = {
+  probability: number;
+  marketState: string;
+  confidence: string;
+  risk: string;
+};
+
+export default function BullBearCard({
+  probability,
+  marketState,
+  confidence,
+  risk,
+}: BullBearCardProps) {
   return (
     <article className="rounded-3xl border border-cyan-400/15 bg-[#0a1626] p-7 shadow-2xl shadow-cyan-950/20">
 
@@ -10,7 +22,7 @@ export default function BullBearCard() {
           </p>
 
           <h3 className="mt-2 text-2xl font-bold">
-            Bull Market
+            {marketState}
           </h3>
         </div>
 
@@ -27,7 +39,7 @@ export default function BullBearCard() {
           <div className="text-center">
 
             <p className="text-6xl font-black text-emerald-400">
-              78%
+              {probability}%
             </p>
 
             <p className="mt-2 text-sm text-slate-400">
@@ -49,7 +61,7 @@ export default function BullBearCard() {
           </p>
 
           <p className="mt-2 text-xl font-bold">
-            High
+            {confidence}
           </p>
 
         </div>
@@ -61,7 +73,7 @@ export default function BullBearCard() {
           </p>
 
           <p className="mt-2 text-xl font-bold text-amber-300">
-            Moderate
+            {risk}
           </p>
 
         </div>

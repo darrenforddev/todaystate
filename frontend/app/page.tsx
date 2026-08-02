@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import BullBearCard from "../components/BullBearCard";
+import { calculateMarketState } from "../lib/marketBrain";
+import { currentMarketData } from "../data/currentMarketData";
+import SignalGrid from "../components/SignalGrid";
 
 const marketSignals = [
   {
@@ -41,7 +44,7 @@ const drivers = [
 
 export default function Home() {
   const [showWhy, setShowWhy] = useState(false);
-
+  const marketState = calculateMarketState(currentMarketData);
   return (
     <main className="min-h-screen bg-[#050b14] text-white">
       <Navbar />
@@ -69,37 +72,13 @@ export default function Home() {
 
         <section className="grid gap-6 xl:grid-cols-[1.25fr_2fr_1fr]">
           <BullBearCard
-  probability={78}
-  marketState="Bull Market"
-  confidence="High"
-  risk="Moderate"
-/>
+            probability={marketState.probability}
+            marketState={marketState.marketState}
+            confidence={marketState.confidence}
+            risk={marketState.risk}
+          />
           <section className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {marketSignals.map((signal) => (
-                <article
-                  key={signal.name}
-                  className="rounded-2xl border border-white/5 bg-[#0a1626] p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500">{signal.name}</p>
-                      <p className="mt-3 text-3xl font-black">{signal.value}</p>
-                    </div>
-
-                    <span
-                      className={
-                        signal.positive
-                          ? "rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-bold text-emerald-300"
-                          : "rounded-full bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300"
-                      }
-                    >
-                      {signal.change}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <SignalGrid signals={marketSignals} />
 
             <article className="rounded-3xl border border-white/5 bg-[#0a1626] p-6">
               <div className="mb-6 flex items-center justify-between">
@@ -112,7 +91,9 @@ export default function Home() {
                   </h3>
                 </div>
 
-                <span className="text-sm text-cyan-400">Live model preview</span>
+                <span className="text-sm text-cyan-400">
+                  Live model preview
+                </span>
               </div>
 
               <div className="space-y-5">
@@ -153,9 +134,7 @@ export default function Home() {
                 Next Major Event
               </p>
 
-              <h3 className="mt-3 text-xl font-bold">
-                US Manufacturing PMI
-              </h3>
+              <h3 className="mt-3 text-xl font-bold">US Manufacturing PMI</h3>
 
               <p className="mt-2 text-sm text-slate-500">
                 High-impact macro release

@@ -7,6 +7,7 @@ import { calculateMarketState } from "../lib/marketBrain";
 import { currentMarketData } from "../data/currentMarketData";
 import SignalGrid from "../components/SignalGrid";
 import WhyPanel from "../components/WhyPanel";
+import CountdownCard from "../components/CountdownCard";
 
 const marketSignals = [
   {
@@ -129,43 +130,13 @@ export default function Home() {
               </div>
             </article>
           </section>
+          <CountdownCard
+            title="Next Major Event"
+            event="US Manufacturing PMI"
+            countdown="1 day 8 hours 42 minutes"
+          />
 
           <aside className="space-y-6">
-            <article className="rounded-3xl border border-violet-400/15 bg-[#0a1626] p-6">
-              <p className="text-sm uppercase tracking-widest text-violet-300">
-                Next Major Event
-              </p>
-
-              <h3 className="mt-3 text-xl font-bold">US Manufacturing PMI</h3>
-
-              <p className="mt-2 text-sm text-slate-500">
-                High-impact macro release
-              </p>
-
-              <div className="my-6 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-xl bg-white/[0.04] p-3">
-                  <p className="text-2xl font-black">01</p>
-                  <p className="text-[10px] uppercase text-slate-500">Days</p>
-                </div>
-
-                <div className="rounded-xl bg-white/[0.04] p-3">
-                  <p className="text-2xl font-black">08</p>
-                  <p className="text-[10px] uppercase text-slate-500">Hours</p>
-                </div>
-
-                <div className="rounded-xl bg-white/[0.04] p-3">
-                  <p className="text-2xl font-black">42</p>
-                  <p className="text-[10px] uppercase text-slate-500">
-                    Minutes
-                  </p>
-                </div>
-              </div>
-
-              <button className="w-full rounded-xl border border-violet-400/25 py-3 text-sm font-bold text-violet-300 transition hover:bg-violet-400/10">
-                OPEN CALENDAR
-              </button>
-            </article>
-
             <article className="rounded-3xl border border-white/5 bg-[#0a1626] p-6">
               <p className="text-sm uppercase tracking-widest text-slate-500">
                 Hot Themes

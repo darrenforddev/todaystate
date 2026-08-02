@@ -133,7 +133,7 @@ export default function Home() {
           <CountdownCard
             title="Next Major Event"
             event="US Manufacturing PMI"
-            countdown="1 day 8 hours 42 minutes"
+            targetDate="2026-08-03T15:00:00+01:00"
           />
 
           <aside className="space-y-6">

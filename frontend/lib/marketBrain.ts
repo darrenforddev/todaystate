@@ -82,6 +82,19 @@ const confidenceScore = Math.min(
   } else if (probability >= 75) {
     risk = "Low";
   }
+let headline = "Markets Remain Balanced";
+let summary =
+  "Economic signals are mixed, leaving the market outlook broadly neutral.";
+
+if (probability >= 65) {
+  headline = "Economic Momentum Remains Supportive";
+  summary =
+    "Manufacturing and services remain in expansion while employment conditions are improving. Elevated inflation is still the main headwind.";
+} else if (probability <= 35) {
+  headline = "Economic Conditions Are Weakening";
+  summary =
+    "Several key indicators are contracting, increasing the risk of weaker market conditions. Defensive positioning may become more important.";
+}
 
   return {
   probability,
@@ -89,6 +102,8 @@ const confidenceScore = Math.min(
   confidence,
   confidenceScore,
   risk,
+  headline,
+  summary,
   positiveDrivers,
   negativeDrivers,
 };

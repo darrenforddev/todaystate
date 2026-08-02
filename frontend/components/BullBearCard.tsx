@@ -1,14 +1,6 @@
 import ProgressRing from "./ProgressRing";
 import ConfidenceBar from "./ConfidenceBar";
-
-type BullBearCardProps = {
-  probability: number;
-  marketState: string;
-  confidence: string;
-  confidenceScore: number;
-  risk: string;
-  onExplain: () => void;
-};
+import type { BullBearCardProps } from "../types/components";
 
 export default function BullBearCard({
   probability,

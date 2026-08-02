@@ -8,6 +8,10 @@ import { currentMarketData } from "../data/currentMarketData";
 import SignalGrid from "../components/SignalGrid";
 import WhyPanel from "../components/WhyPanel";
 import CountdownCard from "../components/CountdownCard";
+import MarketSummaryCard from "../components/MarketSummaryCard";
+import StatusBar from "../components/StatusBar";
+import ThemeCard from "../components/ThemeCard";
+import { themes } from "../data/themes";
 
 const marketSignals = [
   {
@@ -50,6 +54,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#050b14] text-white">
       <Navbar />
+      <StatusBar />
 
       <div className="mx-auto max-w-[1600px] px-6 py-8">
         <section className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -71,12 +76,16 @@ export default function Home() {
             <p className="font-semibold text-slate-300">Live prototype</p>
           </div>
         </section>
-
+        <MarketSummaryCard
+          headline={marketState.headline}
+          summary={marketState.summary}
+        />
         <section className="grid gap-6 xl:grid-cols-[1.25fr_2fr_1fr]">
           <BullBearCard
             probability={marketState.probability}
             marketState={marketState.marketState}
             confidence={marketState.confidence}
+            confidenceScore={marketState.confidenceScore}
             onExplain={() => setShowWhy(!showWhy)}
             risk={marketState.risk}
           />
@@ -142,20 +151,14 @@ export default function Home() {
                 Hot Themes
               </p>
 
-              <div className="mt-5 space-y-3">
-                {[
-                  ["AI Infrastructure", "94"],
-                  ["Industrial Recovery", "88"],
-                  ["Power Grid", "85"],
-                  ["Copper", "82"],
-                ].map(([name, score]) => (
-                  <div
-                    key={name}
-                    className="flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3"
-                  >
-                    <span className="text-sm text-slate-300">{name}</span>
-                    <span className="font-bold text-cyan-300">{score}</span>
-                  </div>
+              <div className="mt-5 space-y-4">
+                {themes.map((theme) => (
+                  <ThemeCard
+                    key={theme.id}
+                    name={theme.name}
+                    score={theme.score}
+                    description={theme.description}
+                  />
                 ))}
               </div>
             </article>

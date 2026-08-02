@@ -6,6 +6,7 @@ import BullBearCard from "../components/BullBearCard";
 import { calculateMarketState } from "../lib/marketBrain";
 import { currentMarketData } from "../data/currentMarketData";
 import SignalGrid from "../components/SignalGrid";
+import WhyPanel from "../components/WhyPanel";
 
 const marketSignals = [
   {
@@ -75,6 +76,7 @@ export default function Home() {
             probability={marketState.probability}
             marketState={marketState.marketState}
             confidence={marketState.confidence}
+            onExplain={() => setShowWhy(!showWhy)}
             risk={marketState.risk}
           />
           <section className="space-y-6">
@@ -190,55 +192,11 @@ export default function Home() {
         </section>
 
         {showWhy && (
-          <section className="mt-6 rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/30 to-[#0a1626] p-7">
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-400">
-                  TodayState Explanation
-                </p>
-
-                <h3 className="mt-3 text-3xl font-bold">
-                  Why is TodayState currently bullish?
-                </h3>
-
-                <p className="mt-5 max-w-3xl leading-7 text-slate-300">
-                  Manufacturing and services activity are both expanding.
-                  Employment conditions are improving, while company earnings
-                  remain supportive. Inflation is still a risk, so the market
-                  view is bullish rather than extremely bullish.
-                </p>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {[
-                    "PMI expansion",
-                    "Services growth",
-                    "Employment improving",
-                    "Earnings supportive",
-                  ].map((reason) => (
-                    <span
-                      key={reason}
-                      className="rounded-full bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300"
-                    >
-                      ✓ {reason}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-black/20 p-5">
-                <h4 className="font-bold text-amber-300">
-                  What would change this view?
-                </h4>
-
-                <ul className="mt-4 space-y-3 text-sm text-slate-300">
-                  <li>• Manufacturing PMI falling below 50</li>
-                  <li>• Inflation accelerating unexpectedly</li>
-                  <li>• Earnings forecasts turning negative</li>
-                  <li>• Credit conditions deteriorating sharply</li>
-                </ul>
-              </div>
-            </div>
-          </section>
+          <WhyPanel
+            probability={marketState.probability}
+            positiveDrivers={marketState.positiveDrivers}
+            negativeDrivers={marketState.negativeDrivers}
+          />
         )}
 
         <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-white/5 py-6 text-xs text-slate-600 sm:flex-row">

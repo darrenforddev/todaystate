@@ -1,3 +1,5 @@
+import type { MarketResult } from "../types/market";
+
 export type MarketInputs = {
   manufacturingPMI: number;
   servicesPMI: number;
@@ -5,14 +7,6 @@ export type MarketInputs = {
   inflationElevated: boolean;
 };
 
-export type MarketResult = {
-  probability: number;
-  marketState: string;
-  confidence: string;
-  risk: string;
-  positiveDrivers: string[];
-  negativeDrivers: string[];
-};
 
 export function calculateMarketState(
   inputs: MarketInputs,
@@ -71,7 +65,10 @@ const negativeDrivers: string[] = [];
   } else if (probability <= 35) {
     marketState = "Bear Market";
   }
-
+const confidenceScore = Math.min(
+  100,
+  60 + positiveDrivers.length * 10 - negativeDrivers.length * 5,
+);
   let confidence = "Medium";
 
   if (probability >= 75 || probability <= 25) {
@@ -90,6 +87,7 @@ const negativeDrivers: string[] = [];
   probability,
   marketState,
   confidence,
+  confidenceScore,
   risk,
   positiveDrivers,
   negativeDrivers,

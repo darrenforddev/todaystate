@@ -8,6 +8,7 @@ export type Theme = {
   lifecycle: string;
 
   description: string;
+  opinion: string;
 
   why: string[];
   risks: string[];

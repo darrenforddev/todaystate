@@ -12,6 +12,8 @@ export const themes: Theme[] = [
 
   description:
     "Investment in AI infrastructure continues accelerating worldwide.",
+    opinion:
+  "AI Infrastructure remains one of TodayState's highest conviction themes as enterprise AI investment, cloud expansion and electricity demand continue to accelerate.",
 
   why: [
     "AI data centre spending accelerating",
@@ -50,6 +52,8 @@ export const themes: Theme[] = [
 
   description:
     "Manufacturing expansion is improving industrial demand.",
+    opinion:
+  "Industrial activity is improving steadily, although the pace of recovery still depends on broader economic growth.",
 
   why: [
     "Manufacturing activity improving",
@@ -85,6 +89,8 @@ export const themes: Theme[] = [
 
   description:
     "Electricity demand and grid upgrades remain structural growth themes.",
+    opinion:
+  "Power Grid infrastructure continues benefiting from structural electricity demand driven by AI, electrification and renewable investment.",
 
   why: [
     "Electricity demand rising",

@@ -16,11 +16,63 @@ export const themes: Theme[] = [
   "AI Infrastructure remains one of TodayState's highest conviction themes as enterprise AI investment, cloud expansion and electricity demand continue to accelerate.",
 
   why: [
-    "AI data centre spending accelerating",
-    "Cloud investment increasing",
-    "Electricity demand growing",
-    "Semiconductor demand remains strong",
-  ],
+  {
+    reason: "AI data centre spending accelerating",
+    confidence: 96,
+    evidence: [
+      {
+        title: "Hyperscaler infrastructure investment",
+        status: "Positive",
+      },
+      {
+        title: "AI server demand",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Cloud investment increasing",
+    confidence: 94,
+    evidence: [
+      {
+        title: "Cloud capital expenditure",
+        status: "Positive",
+      },
+      {
+        title: "Enterprise AI adoption",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Electricity demand growing",
+    confidence: 91,
+    evidence: [
+      {
+        title: "Data-centre electricity demand",
+        status: "Positive",
+      },
+      {
+        title: "Grid infrastructure investment",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Semiconductor demand remains strong",
+    confidence: 93,
+    evidence: [
+      {
+        title: "Advanced chip demand",
+        status: "Positive",
+      },
+      {
+        title: "Semiconductor equipment spending",
+        status: "Positive",
+      },
+    ],
+  },
+],
 
   risks: [
     "High valuations",
@@ -56,10 +108,49 @@ export const themes: Theme[] = [
   "Industrial activity is improving steadily, although the pace of recovery still depends on broader economic growth.",
 
   why: [
-    "Manufacturing activity improving",
-    "Industrial orders increasing",
-    "Capital spending recovering",
-  ],
+  {
+    reason: "Manufacturing activity improving",
+    confidence: 88,
+    evidence: [
+      {
+        title: "Manufacturing PMI trend",
+        status: "Positive",
+      },
+      {
+        title: "Factory output momentum",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Industrial orders increasing",
+    confidence: 84,
+    evidence: [
+      {
+        title: "New orders activity",
+        status: "Positive",
+      },
+      {
+        title: "Business equipment demand",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Capital spending recovering",
+    confidence: 81,
+    evidence: [
+      {
+        title: "Corporate capital expenditure",
+        status: "Positive",
+      },
+      {
+        title: "Machinery investment",
+        status: "Neutral",
+      },
+    ],
+  },
+],
 
   risks: [
     "Economic slowdown",
@@ -93,10 +184,49 @@ export const themes: Theme[] = [
   "Power Grid infrastructure continues benefiting from structural electricity demand driven by AI, electrification and renewable investment.",
 
   why: [
-    "Electricity demand rising",
-    "Grid investment increasing",
-    "AI data centres driving power demand",
-  ],
+  {
+    reason: "Electricity demand rising",
+    confidence: 90,
+    evidence: [
+      {
+        title: "Electricity consumption trend",
+        status: "Positive",
+      },
+      {
+        title: "Peak-load growth",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "Grid investment increasing",
+    confidence: 92,
+    evidence: [
+      {
+        title: "Utility capital expenditure",
+        status: "Positive",
+      },
+      {
+        title: "Transmission upgrade projects",
+        status: "Positive",
+      },
+    ],
+  },
+  {
+    reason: "AI data centres driving power demand",
+    confidence: 94,
+    evidence: [
+      {
+        title: "Data-centre connection demand",
+        status: "Positive",
+      },
+      {
+        title: "Power infrastructure orders",
+        status: "Positive",
+      },
+    ],
+  },
+],
 
   risks: [
     "Project delays",

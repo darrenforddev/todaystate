@@ -1,3 +1,8 @@
+export interface ThemeEvidence {
+  title: string;
+  status: "Positive" | "Neutral" | "Negative";
+}
+
 export type Theme = {
   id: string;
   name: string;
@@ -10,7 +15,11 @@ export type Theme = {
   description: string;
   opinion: string;
 
-  why: string[];
+  why: {
+  reason: string;
+  confidence: number;
+  evidence: ThemeEvidence[];
+}[];
   risks: string[];
   etfs: string[];
   companies: string[];

@@ -1,59 +1,162 @@
 # TodayState Architecture
 
-> Don't just follow the markets. Understand what is driving them.
+## Philosophy
+
+Evidence first.
+
+Intelligence second.
+
+Decisions third.
 
 ---
 
-## 1. Purpose
+# High-Level Architecture
 
-TodayState is a macro intelligence platform.
+                   TODAYSTATE
 
-It collects economic and market data, analyses that data, explains the result, and displays it through clear visual dashboards.
+                        │
+
+                 Market Brain UI
+
+                        │
+
+        ┌───────────────┼───────────────┐
+
+        │               │               │
+
+Theme Intelligence Company Intelligence ETF Intelligence (planned)
+
+        │               │
+
+        └───────────────┼───────────────┘
+
+                Intelligence Layer
+
+                        │
+
+        ┌───────────────┼───────────────┐
+
+        │               │               │
+
+     Scoring      Confidence      Reasoning
+
+                        │
+
+                 Relationship Engine
+
+                        │
+
+                  Evidence Registry
 
 ---
 
-## 2. Main System Flow
+## Current Engine
 
-Economic Data
+### Evidence Registry
 
-↓
-
-Market Brain
-
-↓
-
-Evidence Engine
-
-↓
-
-Dashboard Components
-
-↓
-
-User
-
----
-
-## 3. Data Layer
-
-The data layer stores the information used by TodayState.
+Stores all economic evidence.
 
 Examples:
 
-- Manufacturing PMI
-- Services PMI
-- Inflation
-- Employment
-- GDP
-- Retail sales
-- Interest rates
-- Earnings
-- Commodities
-- Currencies
-- Stock prices
+- ISM Manufacturing PMI
+- Factory Orders
+- Construction Spending
 
-Current prototype data lives in:
+---
 
-```text
-frontend/data
-```
+### Relationship Engine
+
+Links evidence to:
+
+- Themes
+- Companies
+- ETFs (planned)
+
+---
+
+### Query Engine
+
+Retrieves all supporting evidence for an intelligence object.
+
+---
+
+### Scoring Engine
+
+Calculates conviction using:
+
+Evidence Weight × Relationship Strength
+
+---
+
+### Confidence Engine
+
+Calculates evidence confidence.
+
+---
+
+### Reasoning Engine
+
+Explains why MBIE reached a conclusion.
+
+---
+
+# Intelligence Objects
+
+## Theme Intelligence
+
+Returns:
+
+- Conviction
+- Confidence
+- Narrative
+- Supporting Evidence
+- Reasoning
+
+---
+
+## Company Intelligence
+
+Returns:
+
+- Conviction
+- Confidence
+- Narrative
+
+---
+
+## Planned
+
+- ETF Intelligence
+- Sector Intelligence
+- Portfolio Intelligence
+
+---
+
+# User Interface
+
+Completed
+
+- Market Brain
+- Theme Card
+- Company Card
+- Circular Gauges
+- Supporting Evidence
+- Reasoning
+
+---
+
+# Long-Term Vision
+
+Economic Evidence
+
+↓
+
+Relationships
+
+↓
+
+Intelligence
+
+↓
+
+Investment Decisions

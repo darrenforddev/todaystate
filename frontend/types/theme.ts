@@ -11,6 +11,7 @@ export type Theme = {
   momentum: string;
   confidence: number;
   lifecycle: string;
+  risk: string;
 
   description: string;
   opinion: string;
@@ -22,5 +23,8 @@ export type Theme = {
 }[];
   risks: string[];
   etfs: string[];
-  companies: string[];
+  companies: {
+  id: string;
+  name: string;
+}[];
 };

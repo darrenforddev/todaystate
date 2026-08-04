@@ -5,7 +5,7 @@ export type MarketResult = {
   confidenceScore: number;
   risk: string;
   headline: string;
-summary: string;
+  summary: string;
   positiveDrivers: string[];
   negativeDrivers: string[];
 };

@@ -5,6 +5,7 @@ import RiskSection from "../../../components/reports/RiskSection";
 import ETFSection from "../../../components/reports/ETFSection";
 import CompanySection from "../../../components/reports/CompanySection";
 import OpinionSection from "../../../components/reports/OpinionSection";
+import IntelligenceScorecard from "../../../components/reports/IntelligenceScorecard";
 
 export default async function ThemePage({
   params,
@@ -30,6 +31,14 @@ export default async function ThemePage({
           confidence={theme.confidence}
           momentum={theme.momentum}
           lifecycle={theme.lifecycle}
+        />
+
+        <IntelligenceScorecard
+          score={theme.score}
+          confidence={theme.confidence}
+          momentum={theme.momentum}
+          lifecycle={theme.lifecycle}
+          risk={theme.risk}
         />
         <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
           {theme.description}

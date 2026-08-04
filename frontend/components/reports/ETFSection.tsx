@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type ETFSectionProps = {
   etfs: string[];
 };
@@ -5,16 +7,17 @@ type ETFSectionProps = {
 export default function ETFSection({ etfs }: ETFSectionProps) {
   return (
     <section className="mt-10 rounded-3xl border border-white/5 bg-[#0a1626] p-7">
-      <h2 className="text-2xl font-bold">Related ETFs</h2>
+      <h2 className="text-2xl font-bold">ETF Exposure</h2>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {etfs.map((etf) => (
-          <span
-            key={etf}
-            className="rounded-full bg-cyan-400/10 px-4 py-2 font-semibold text-cyan-300"
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {etfs.map((ticker) => (
+          <Link
+            key={ticker}
+            href={`/etfs/${ticker.toLowerCase()}`}
+            className="rounded-2xl bg-white/[0.03] p-4 transition hover:bg-cyan-400/10"
           >
-            {etf}
-          </span>
+            <p className="font-semibold">{ticker}</p>
+          </Link>
         ))}
       </div>
     </section>

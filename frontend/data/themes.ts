@@ -9,6 +9,7 @@ export const themes: Theme[] = [
   momentum: "Very Strong",
   confidence: 96,
   lifecycle: "Expansion",
+  risk: "Moderate",
 
   description:
     "Investment in AI infrastructure continues accelerating worldwide.",
@@ -87,11 +88,11 @@ export const themes: Theme[] = [
   ],
 
   companies: [
-    "NVIDIA",
-    "Broadcom",
-    "Vertiv",
-    "Schneider Electric",
-  ],
+  { id: "nvidia", name: "NVIDIA" },
+  { id: "broadcom", name: "Broadcom" },
+  { id: "vertiv", name: "Vertiv" },
+  { id: "schneider-electric", name: "Schneider Electric" },
+],
 },
   {
   id: "industrial-recovery",
@@ -101,6 +102,7 @@ export const themes: Theme[] = [
   momentum: "Improving",
   confidence: 88,
   lifecycle: "Expansion",
+  risk: "Moderate",
 
   description:
     "Manufacturing expansion is improving industrial demand.",
@@ -163,11 +165,11 @@ export const themes: Theme[] = [
   ],
 
   companies: [
-    "Caterpillar",
-    "Deere",
-    "Siemens",
-    "ABB",
-  ],
+  { id: "caterpillar", name: "Caterpillar" },
+  { id: "deere", name: "Deere" },
+  { id: "siemens", name: "Siemens" },
+  { id: "abb", name: "ABB" },
+],
 },
   {
   id: "power-grid",
@@ -177,6 +179,7 @@ export const themes: Theme[] = [
   momentum: "Strong",
   confidence: 90,
   lifecycle: "Expansion",
+  risk: "Moderate",
 
   description:
     "Electricity demand and grid upgrades remain structural growth themes.",
@@ -239,10 +242,10 @@ export const themes: Theme[] = [
   ],
 
   companies: [
-    "Eaton",
-    "Quanta Services",
-    "Schneider Electric",
-    "Hitachi Energy",
-  ],
+  { id: "eaton", name: "Eaton" },
+  { id: "quanta-services", name: "Quanta Services" },
+  { id: "schneider-electric", name: "Schneider Electric" },
+  { id: "hitachi-energy", name: "Hitachi Energy" },
+],
 },
 ];

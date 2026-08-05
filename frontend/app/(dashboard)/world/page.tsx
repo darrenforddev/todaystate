@@ -27,12 +27,14 @@ export default function WorldDeskPage() {
         </header>
 
         <WorldDeskLayout
-          marketStatus={<MarketStatus />}
+          marketStatus={<MarketStatus markets={dashboard.marketStatus} />}
           mbiePulse={<MBIEPulse pulse={dashboard.mbiePulse} />}
-          worldState={<WorldState />}
+          worldState={<WorldState worldState={dashboard.worldState} />}
           topThemes={<TopThemes themes={dashboard.topThemes} />}
           watchToday={<WatchToday events={dashboard.watchToday} />}
-          latestIntelligence={<LatestIntelligence />}
+          latestIntelligence={
+            <LatestIntelligence intelligence={dashboard.latestIntelligence} />
+          }
         />
       </div>
     </main>

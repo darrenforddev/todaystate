@@ -2,93 +2,18 @@
 
 import { useEffect, useState } from "react";
 
-type Market = {
-  id: string;
-  city: string;
-  country: string;
-  flag: string;
-  timeZone: string;
-  openHour: number;
-  openMinute: number;
-  closeHour: number;
-  closeMinute: number;
-};
+import type { MarketSession } from "@/data/markets";
 
-const markets: Market[] = [
-  {
-    id: "sydney",
-    city: "Sydney",
-    country: "Australia",
-    flag: "🇦🇺",
-    timeZone: "Australia/Sydney",
-    openHour: 10,
-    openMinute: 0,
-    closeHour: 16,
-    closeMinute: 0,
-  },
-  {
-    id: "tokyo",
-    city: "Tokyo",
-    country: "Japan",
-    flag: "🇯🇵",
-    timeZone: "Asia/Tokyo",
-    openHour: 9,
-    openMinute: 0,
-    closeHour: 15,
-    closeMinute: 30,
-  },
-  {
-    id: "hong-kong",
-    city: "Hong Kong",
-    country: "Hong Kong",
-    flag: "🇭🇰",
-    timeZone: "Asia/Hong_Kong",
-    openHour: 9,
-    openMinute: 30,
-    closeHour: 16,
-    closeMinute: 0,
-  },
-  {
-    id: "london",
-    city: "London",
-    country: "United Kingdom",
-    flag: "🇬🇧",
-    timeZone: "Europe/London",
-    openHour: 8,
-    openMinute: 0,
-    closeHour: 16,
-    closeMinute: 30,
-  },
-  {
-    id: "frankfurt",
-    city: "Frankfurt",
-    country: "Germany",
-    flag: "🇩🇪",
-    timeZone: "Europe/Berlin",
-    openHour: 9,
-    openMinute: 0,
-    closeHour: 17,
-    closeMinute: 30,
-  },
-  {
-    id: "new-york",
-    city: "New York",
-    country: "United States",
-    flag: "🇺🇸",
-    timeZone: "America/New_York",
-    openHour: 9,
-    openMinute: 30,
-    closeHour: 16,
-    closeMinute: 0,
-  },
-];
+type MarketStatusProps = {
+  markets: MarketSession[];
+};
 
 type MarketClock = {
   time: string;
   status: "Open" | "Closed";
 };
 
-function getMarketClock(date: Date, market: Market): MarketClock {
+function getMarketClock(date: Date, market: MarketSession): MarketClock {
   const formatter = new Intl.DateTimeFormat("en-GB", {
     timeZone: market.timeZone,
     weekday: "short",
@@ -134,7 +59,13 @@ function getMarketClock(date: Date, market: Market): MarketClock {
   };
 }
 
-export default function MarketStatus() {
+function formatSessionTime(hour: number, minute: number) {
+  return `${hour.toString().padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+export default function MarketStatus({ markets }: MarketStatusProps) {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -219,10 +150,9 @@ export default function MarketStatus() {
               </p>
 
               <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                Standard session {market.openHour.toString().padStart(2, "0")}:
-                {market.openMinute.toString().padStart(2, "0")}–{" "}
-                {market.closeHour.toString().padStart(2, "0")}:
-                {market.closeMinute.toString().padStart(2, "0")}
+                Standard session{" "}
+                {formatSessionTime(market.openHour, market.openMinute)}–{" "}
+                {formatSessionTime(market.closeHour, market.closeMinute)}
               </p>
             </article>
           );

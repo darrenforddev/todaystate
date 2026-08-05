@@ -1,102 +1,187 @@
 # TodayState Architecture
 
-## Philosophy
+---
 
-Evidence first.
+# Philosophy
 
-Intelligence second.
+> **Evidence first. Intelligence second. Decisions third.**
 
-Decisions third.
+TodayState exists to help users understand the world before making investment decisions.
+
+The platform is built around explainable investment intelligence rather than predictions.
 
 ---
 
 # High-Level Architecture
 
-                   TODAYSTATE
+```
+                     TODAYSTATE
 
-                        │
+                           │
 
-                 Market Brain UI
+                    Presentation Layer
 
-                        │
+                           │
 
-        ┌───────────────┼───────────────┐
+                   Market Brain UI
+                   World Desk
+                   Theme Explorer
+                   Company Explorer
+                   ETF Explorer
 
-        │               │               │
+                           │
 
-Theme Intelligence Company Intelligence ETF Intelligence (planned)
+                    Service Layer
 
-        │               │
+                           │
 
-        └───────────────┼───────────────┘
+               WorldDeskService
+               ThemeService
+               CompanyService
+               ETFService
 
-                Intelligence Layer
+                           │
 
-                        │
+                 Intelligence Layer
 
-        ┌───────────────┼───────────────┐
+                           │
 
-        │               │               │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
 
-     Scoring      Confidence      Reasoning
+     Scoring Engine   Confidence Engine  Reasoning Engine
 
-                        │
+                           │
 
                  Relationship Engine
 
-                        │
+                           │
 
                   Evidence Registry
 
+                           │
+
+                 External Data Services
+```
+
 ---
 
-## Current Engine
+# Platform Layers
 
-### Evidence Registry
+## Presentation Layer
+
+Responsible for displaying information.
+
+Examples:
+
+- World Desk
+- Theme Explorer
+- Company Explorer
+- ETF Explorer
+
+Presentation components never calculate intelligence.
+
+---
+
+## Service Layer
+
+Responsible for assembling data for the user interface.
+
+Examples:
+
+- WorldDeskService
+- ThemeService
+- CompanyService
+- ETFService
+
+Services orchestrate.
+
+They do not calculate conviction or confidence.
+
+---
+
+## Intelligence Layer
+
+Responsible for analysing evidence.
+
+Contains:
+
+- Evidence Registry
+- Relationship Engine
+- Scoring Engine
+- Confidence Engine
+- Reasoning Engine
+
+This is the MBIE intelligence pipeline.
+
+---
+
+# Current Engines
+
+## Evidence Registry
 
 Stores all economic evidence.
 
-Examples:
+Examples
 
 - ISM Manufacturing PMI
 - Factory Orders
 - Construction Spending
+- Employment
+- Inflation
+- Retail Sales
 
 ---
 
-### Relationship Engine
+## Relationship Engine
 
-Links evidence to:
+Connects evidence to:
 
 - Themes
 - Companies
-- ETFs (planned)
+- ETFs
+- Sectors (future)
 
 ---
 
-### Query Engine
+## Query Engine
 
 Retrieves all supporting evidence for an intelligence object.
 
 ---
 
-### Scoring Engine
+## Scoring Engine
 
 Calculates conviction using:
 
+```
 Evidence Weight × Relationship Strength
+```
+
+Returns a conviction score.
 
 ---
 
-### Confidence Engine
+## Confidence Engine
 
-Calculates evidence confidence.
+Calculates confidence using:
+
+- Evidence quality
+- Agreement
+- Freshness
+- Breadth
+
+Returns a confidence score.
 
 ---
 
-### Reasoning Engine
+## Reasoning Engine
 
-Explains why MBIE reached a conclusion.
+Produces explainable intelligence.
+
+Every score should answer:
+
+> Why?
 
 ---
 
@@ -104,31 +189,92 @@ Explains why MBIE reached a conclusion.
 
 ## Theme Intelligence
 
-Returns:
+Returns
 
-- Conviction
+- Score
 - Confidence
 - Narrative
 - Supporting Evidence
-- Reasoning
+- Risks
+- Related Companies
+- Related ETFs
 
 ---
 
 ## Company Intelligence
 
-Returns:
+Returns
 
-- Conviction
+- Score
 - Confidence
 - Narrative
+- Supporting Themes
 
 ---
 
-## Planned
+## ETF Intelligence
 
-- ETF Intelligence
+Returns
+
+- Score
+- Confidence
+- Narrative
+- Holdings
+- Theme Exposure
+
+---
+
+## Future Intelligence
+
 - Sector Intelligence
 - Portfolio Intelligence
+- Country Intelligence
+
+---
+
+# Data Layer
+
+Static data currently lives in:
+
+```
+frontend/data/
+```
+
+Examples
+
+- themes.ts
+- events.ts
+- markets.ts
+- worldState.ts
+- intelligence.ts
+- mbiePulse.ts
+
+As development progresses this layer will gradually be replaced by MBIE engines and live services.
+
+---
+
+# Service Layer
+
+Services prepare information for the UI.
+
+Example
+
+```
+getWorldDeskData()
+```
+
+Returns
+
+- Market Status
+- World State
+- MBIE Pulse
+- Top Themes
+- Watch Today
+- Latest Intelligence
+
+Services assemble data.
+
+They never calculate intelligence.
 
 ---
 
@@ -136,27 +282,140 @@ Returns:
 
 Completed
 
-- Market Brain
-- Theme Card
-- Company Card
+- Application Shell
+- Sidebar
+- Global Search
+- World Desk
+- Market Status
+- MBIE Pulse
+- World State
+- Top Themes
+- Watch Today
+- Latest Intelligence
+- Theme Cards
+- Company Cards
 - Circular Gauges
 - Supporting Evidence
-- Reasoning
+- Reasoning Panels
+
+Planned
+
+- Theme Explorer
+- Company Explorer
+- ETF Explorer
+- Evidence Explorer
+- Reports
+
+---
+
+# Architecture Rules
+
+## Rule 1
+
+Components display.
+
+---
+
+## Rule 2
+
+Services assemble.
+
+---
+
+## Rule 3
+
+Engines calculate.
+
+---
+
+## Rule 4
+
+Evidence is the single source of truth.
+
+---
+
+## Rule 5
+
+Every score must be explainable.
+
+---
+
+## Rule 6
+
+Every page answers one primary question.
 
 ---
 
 # Long-Term Vision
 
+```
 Economic Evidence
 
-↓
+        │
 
-Relationships
+        ▼
 
-↓
+Evidence Registry
 
-Intelligence
+        │
 
-↓
+        ▼
 
-Investment Decisions
+Relationship Engine
+
+        │
+
+        ▼
+
+Confidence Engine
+
+        │
+
+        ▼
+
+Scoring Engine
+
+        │
+
+        ▼
+
+Reasoning Engine
+
+        │
+
+        ▼
+
+Theme Intelligence
+
+        │
+
+        ▼
+
+Company Intelligence
+
+        │
+
+        ▼
+
+ETF Intelligence
+
+        │
+
+        ▼
+
+World Desk
+
+        │
+
+        ▼
+
+Better Investment Decisions
+```
+
+---
+
+# TodayState Mission
+
+> **Explain the world before people invest in it.**
+
+TodayState is designed to transform complex economic evidence into calm, explainable investment intelligence.

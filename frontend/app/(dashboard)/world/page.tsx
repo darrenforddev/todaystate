@@ -4,8 +4,13 @@ import WorldDeskLayout from "@/components/worldDesk/WorldDeskLayout";
 import WorldState from "@/components/worldDesk/WorldState";
 import TopThemes from "@/components/worldDesk/TopThemes";
 import WatchToday from "@/components/worldDesk/WatchToday";
+import LatestIntelligence from "@/components/worldDesk/LatestIntelligence";
+
+import { getWorldDeskData } from "@/services/worldDeskService";
 
 export default function WorldDeskPage() {
+  const dashboard = getWorldDeskData();
+
   return (
     <main className="min-h-screen bg-[#050b14] text-white">
       <div className="mx-auto max-w-7xl p-10">
@@ -23,45 +28,13 @@ export default function WorldDeskPage() {
 
         <WorldDeskLayout
           marketStatus={<MarketStatus />}
-          mbiePulse={<MBIEPulse />}
+          mbiePulse={<MBIEPulse pulse={dashboard.mbiePulse} />}
           worldState={<WorldState />}
-          topThemes={<TopThemes />}
-          watchToday={<WatchToday />}
-          latestIntelligence={
-            <PlaceholderCard
-              eyebrow="Latest Intelligence"
-              title="What Changed"
-              description="The most important evidence and market developments detected today."
-            />
-          }
+          topThemes={<TopThemes themes={dashboard.topThemes} />}
+          watchToday={<WatchToday events={dashboard.watchToday} />}
+          latestIntelligence={<LatestIntelligence />}
         />
       </div>
     </main>
-  );
-}
-
-function PlaceholderCard({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <section className="h-full rounded-3xl border border-white/5 bg-[#0a1626] p-7">
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
-        {eyebrow}
-      </p>
-
-      <h2 className="mt-3 text-3xl font-black text-white">{title}</h2>
-
-      <p className="mt-4 max-w-2xl leading-7 text-slate-400">{description}</p>
-
-      <div className="mt-8 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-sm text-slate-500">
-        Component coming next
-      </div>
-    </section>
   );
 }

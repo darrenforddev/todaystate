@@ -1,7 +1,9 @@
 export interface ISMManufacturingRecord {
-  reportDate: string;
+  reportPeriod: string;
 
   manufacturingPMI: number;
+  previousManufacturingPMI: number;
+
   production: number;
   newOrders: number;
   employment: number;
@@ -12,14 +14,16 @@ export interface ISMManufacturingRecord {
   newExportOrders: number;
   imports: number;
 
-  overallAssessment: string;
+  mbieAssessment: string;
 }
 
 export const ismManufacturingHistory: ISMManufacturingRecord[] = [
   {
-    reportDate: "2026-07",
+    reportPeriod: "2026-07",
 
     manufacturingPMI: 55.6,
+    previousManufacturingPMI: 53.3,
+
     production: 58.5,
     newOrders: 56.7,
     employment: 52.8,
@@ -30,7 +34,7 @@ export const ismManufacturingHistory: ISMManufacturingRecord[] = [
     newExportOrders: 53.0,
     imports: 55.7,
 
-    overallAssessment:
+    mbieAssessment:
       "Manufacturing strengthened with improving production and new orders, although price pressures remained elevated.",
   },
 ];

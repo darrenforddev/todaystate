@@ -1,7 +1,9 @@
 export interface ISMServicesRecord {
-  reportDate: string;
+  reportPeriod: string;
 
   servicesPMI: number;
+  previousServicesPMI: number;
+
   businessActivity: number;
   newOrders: number;
   employment: number;
@@ -12,14 +14,16 @@ export interface ISMServicesRecord {
   newExportOrders: number;
   imports: number;
 
-  overallAssessment: string;
+  mbieAssessment: string;
 }
 
 export const ismServicesHistory: ISMServicesRecord[] = [
   {
-    reportDate: "2026-07",
+    reportPeriod: "2026-07",
 
     servicesPMI: 54.1,
+    previousServicesPMI: 54.0,
+
     businessActivity: 59.1,
     newOrders: 57.2,
     employment: 47.4,
@@ -30,7 +34,7 @@ export const ismServicesHistory: ISMServicesRecord[] = [
     newExportOrders: 52.0,
     imports: 51.8,
 
-    overallAssessment:
-      "Expansion continued with strong demand, improving business activity and elevated inflation pressures.",
+    mbieAssessment:
+      "Services activity remained in expansion with strong business activity and new orders, while employment weakened and price pressures increased.",
   },
 ];

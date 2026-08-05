@@ -12,38 +12,37 @@ import MarketSummaryCard from "../components/MarketSummaryCard";
 import StatusBar from "../components/StatusBar";
 import ThemeCard from "../components/ThemeCard";
 import { themes } from "../data/themes";
+import { getDrivers } from "../engine/driverEngine";
+import { getMarketExplanation } from "../engine/explainEngine";
 import {
-  getISMManufacturingHistory,
-  getISMServicesHistory,
+  getManufacturingSummary,
+  getServicesSummary,
 } from "../repositories/evidenceRepository";
-
-const drivers = [
-  { name: "Manufacturing", score: "+8", width: "82%" },
-  { name: "Services", score: "+7", width: "74%" },
-  { name: "Employment", score: "+5", width: "61%" },
-  { name: "Earnings", score: "+6", width: "68%" },
-  { name: "Inflation", score: "-2", width: "34%" },
-];
 
 export default function Home() {
   const [showWhy, setShowWhy] = useState(false);
   const marketState = calculateMarketState(currentMarketData);
+  const explanation = getMarketExplanation();
 
-  const latestManufacturing = getISMManufacturingHistory().at(-1);
-
-  const latestServices = getISMServicesHistory().at(-1);
+  const manufacturing = getManufacturingSummary();
+  const services = getServicesSummary();
+  const drivers = getDrivers();
   const marketSignals = [
     {
       name: "Manufacturing PMI",
-      value: latestManufacturing?.manufacturingPMI.toString() ?? "--",
-      change: "Expanding",
-      positive: true,
+      value: manufacturing ? manufacturing.value.toFixed(1) : "--",
+      change: manufacturing
+        ? `${manufacturing.change >= 0 ? "▲" : "▼"} ${manufacturing.change.toFixed(1)}`
+        : "--",
+      positive: manufacturing ? manufacturing.change >= 0 : true,
     },
     {
       name: "Services PMI",
-      value: latestServices?.servicesPMI.toString() ?? "--",
-      change: "Expanding",
-      positive: true,
+      value: services ? services.value.toFixed(1) : "--",
+      change: services
+        ? `${services.change >= 0 ? "▲" : "▼"} ${services.change.toFixed(1)}`
+        : "--",
+      positive: services ? services.change >= 0 : true,
     },
     {
       name: "Employment",
@@ -123,11 +122,12 @@ export default function Home() {
                       <span className="text-slate-300">{driver.name}</span>
                       <span
                         className={
-                          driver.score.startsWith("+")
+                          driver.positive
                             ? "font-bold text-emerald-300"
                             : "font-bold text-red-300"
                         }
                       >
+                        {driver.positive ? "+" : "-"}
                         {driver.score}
                       </span>
                     </div>
@@ -135,7 +135,7 @@ export default function Home() {
                     <div className="h-2 overflow-hidden rounded-full bg-white/5">
                       <div
                         className={
-                          driver.score.startsWith("+")
+                          driver.positive
                             ? "h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
                             : "h-full rounded-full bg-gradient-to-r from-amber-400 to-red-400"
                         }
@@ -179,6 +179,7 @@ export default function Home() {
             probability={marketState.probability}
             positiveDrivers={marketState.positiveDrivers}
             negativeDrivers={marketState.negativeDrivers}
+            explanation={explanation}
           />
         )}
 

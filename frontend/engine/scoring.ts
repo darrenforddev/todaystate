@@ -1,7 +1,7 @@
 import { evidence } from "@/data/evidence";
 import { relationships } from "./relationships";
 
-function calculateScore(
+export function calculateRelationshipScore(
   targetType: "theme" | "company",
   targetId: string
 ): number {
@@ -38,9 +38,9 @@ function calculateScore(
 }
 
 export function calculateThemeScore(themeId: string): number {
-  return calculateScore("theme", themeId);
+  return calculateRelationshipScore("theme", themeId);
 }
 
 export function calculateCompanyScore(companyId: string): number {
-  return calculateScore("company", companyId);
+  return calculateRelationshipScore("company", companyId);
 }

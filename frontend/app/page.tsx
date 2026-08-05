@@ -12,33 +12,10 @@ import MarketSummaryCard from "../components/MarketSummaryCard";
 import StatusBar from "../components/StatusBar";
 import ThemeCard from "../components/ThemeCard";
 import { themes } from "../data/themes";
-
-const marketSignals = [
-  {
-    name: "Manufacturing PMI",
-    value: "53.3",
-    change: "Expanding",
-    positive: true,
-  },
-  {
-    name: "Services PMI",
-    value: "54.0",
-    change: "Expanding",
-    positive: true,
-  },
-  {
-    name: "Employment",
-    value: "Improving",
-    change: "Positive",
-    positive: true,
-  },
-  {
-    name: "Inflation Pressure",
-    value: "Elevated",
-    change: "Watch",
-    positive: false,
-  },
-];
+import {
+  getISMManufacturingHistory,
+  getISMServicesHistory,
+} from "../repositories/evidenceRepository";
 
 const drivers = [
   { name: "Manufacturing", score: "+8", width: "82%" },
@@ -51,6 +28,37 @@ const drivers = [
 export default function Home() {
   const [showWhy, setShowWhy] = useState(false);
   const marketState = calculateMarketState(currentMarketData);
+
+  const latestManufacturing = getISMManufacturingHistory().at(-1);
+
+  const latestServices = getISMServicesHistory().at(-1);
+  const marketSignals = [
+    {
+      name: "Manufacturing PMI",
+      value: latestManufacturing?.manufacturingPMI.toString() ?? "--",
+      change: "Expanding",
+      positive: true,
+    },
+    {
+      name: "Services PMI",
+      value: latestServices?.servicesPMI.toString() ?? "--",
+      change: "Expanding",
+      positive: true,
+    },
+    {
+      name: "Employment",
+      value: "Improving",
+      change: "Positive",
+      positive: true,
+    },
+    {
+      name: "Inflation Pressure",
+      value: "Elevated",
+      change: "Watch",
+      positive: false,
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-[#050b14] text-white">
       <Navbar />

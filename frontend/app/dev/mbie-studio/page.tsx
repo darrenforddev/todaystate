@@ -3,6 +3,8 @@ import Pipeline from "@/components/mbie/Pipeline";
 import EvidenceCard from "@/components/mbie/EvidenceCard";
 import ThemeCard from "@/components/mbie/ThemeCard";
 import ReasoningCard from "@/components/mbie/ReasoningCard";
+import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
+import SystemStatus from "@/components/mbie/SystemStatus";
 
 import { buildEvidence, manufacturingSample } from "@/engine/evidence";
 import { getThemeIntelligence } from "@/engine/themeEngine";
@@ -33,6 +35,15 @@ export default function MBIEStudioPage() {
           <Pipeline />
         </div>
 
+        <div className="mb-8">
+          <TodaysIntelligence
+            theme={theme.theme.name}
+            indicator="Manufacturing PMI"
+            value={evidence.current}
+            status={evidence.status}
+          />
+        </div>
+
         <div className="grid gap-8 lg:grid-cols-2">
           <EvidenceCard
             indicator="Manufacturing PMI"
@@ -52,13 +63,15 @@ export default function MBIEStudioPage() {
           />
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <ReasoningCard
             indicator="Manufacturing PMI"
             status={evidence.status}
             theme={theme.theme.name}
             strength={theme.averageRelationshipStrength}
           />
+
+          <SystemStatus />
         </div>
       </div>
     </main>

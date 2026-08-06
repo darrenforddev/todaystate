@@ -1,7 +1,8 @@
-import { buildEvidence } from "@/engine/evidence/evidenceEngine";
-import { manufacturingSample } from "@/engine/evidence/testData";
+import EvidenceCard from "@/components/mbie/EvidenceCard";
 
-export default function EvidenceTest() {
+import { buildEvidence, manufacturingSample } from "@/engine/evidence";
+
+export default function EvidenceTestPage() {
   const evidence = buildEvidence(
     manufacturingSample.indicatorId,
     manufacturingSample.current,
@@ -9,12 +10,33 @@ export default function EvidenceTest() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-950 p-8 text-white">
-      <h1 className="mb-8 text-4xl font-bold">Evidence Engine Test</h1>
+    <main className="min-h-screen bg-slate-950 p-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-10">
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-400">
+            MBIE DEVELOPMENT CONSOLE
+          </p>
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900 p-6">
-        <pre>{JSON.stringify(evidence, null, 2)}</pre>
-      </section>
+          <h1 className="mt-2 text-5xl font-bold text-white">
+            Evidence Engine
+          </h1>
+
+          <p className="mt-4 text-slate-400">
+            Live interpretation of incoming economic data.
+          </p>
+        </div>
+
+        <EvidenceCard
+          indicator="Manufacturing PMI"
+          current={evidence.current}
+          previous={evidence.previous}
+          change={evidence.change}
+          direction={evidence.direction}
+          status={evidence.status}
+          impact={evidence.impact}
+          explanation={evidence.explanation}
+        />
+      </div>
     </main>
   );
 }

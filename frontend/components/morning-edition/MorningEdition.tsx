@@ -1,41 +1,25 @@
-import { getMarketExplanation } from "@/engine/explainEngine";
-import MorningSummary from "./MorningSummary";
-import MorningOpportunity from "./MorningOpportunity";
-import MorningRisk from "./MorningRisk";
+import { getMorningBrief } from "@/engine/morningBriefEngine";
 
-export default function MorningEdition() {
-  const now = new Date();
-  const explanation = getMarketExplanation();
-
-  const hour = now.getHours();
-
-  const greeting =
-    hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-
-  const date = now.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+export default function MorningSummary() {
+  const brief = getMorningBrief();
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-[#06101c] px-10 py-14">
-      <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
-        MORNING EDITION
-      </p>
+    <div className="mt-8 space-y-6">
+      <div>
+        <p className="text-sm uppercase tracking-[0.25em] text-cyan-300">
+          🧠 MBIE DAILY
+        </p>
 
-      <p className="mt-5 text-sm uppercase tracking-[0.25em] text-slate-500">
-        {date}
-      </p>
+        <h2 className="mt-2 text-3xl font-bold">{brief.headline}</h2>
 
-      <h1 className="mt-2 text-5xl font-black tracking-tight">{greeting}</h1>
-
-      <MorningSummary />
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <MorningOpportunity />
-        <MorningRisk />
+        <p className="mt-4 max-w-4xl text-lg leading-8 text-slate-300">
+          {brief.summary}
+        </p>
       </div>
-    </section>
+
+      <button className="rounded-xl border border-cyan-400/30 px-6 py-3 text-cyan-300 transition hover:bg-cyan-400/10">
+        Explore Today&apos;s Intelligence →
+      </button>
+    </div>
   );
 }

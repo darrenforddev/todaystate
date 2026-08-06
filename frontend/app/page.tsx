@@ -11,6 +11,7 @@ import CountdownCard from "../components/CountdownCard";
 import MarketSummaryCard from "../components/MarketSummaryCard";
 import StatusBar from "../components/StatusBar";
 import ThemeCard from "../components/ThemeCard";
+import SectionHeader from "../components/ui/SectionHeader";
 import { themes } from "../data/themes";
 import { getDrivers } from "../engine/driverEngine";
 import { getMarketExplanation } from "../engine/explainEngine";
@@ -70,16 +71,11 @@ export default function Home() {
         <div className="mt-8">
           <section className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
-                Global Market Overview
-              </p>
-
-              <h2 className="max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl">
-                Don&apos;t just follow the markets.
-                <span className="block text-slate-400">
-                  Understand what is driving them.
-                </span>
-              </h2>
+              <SectionHeader
+                eyebrow="Global Market Overview"
+                title="Don't just follow the markets."
+                subtitle="Understand what is driving them."
+              />
             </div>
 
             <div className="text-left lg:text-right">

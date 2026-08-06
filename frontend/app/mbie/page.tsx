@@ -1,38 +1,30 @@
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
+import ConfidenceEvidenceCard from "@/components/mbie/ConfidenceEvidenceCard";
 import { calculateConfidence } from "@/engine/confidence/confidenceEngine";
+import { buildConfidenceFactors } from "@/engine/confidence/confidenceFactorBuilder";
+import {
+  strongEvidence,
+  mixedEvidence,
+  weakEvidence,
+} from "@/engine/confidence/testData";
 import { calculateScore } from "@/engine/scoring/scoringEngine";
 
 export default function MBIEPage() {
   const confidenceScenarios = [
     {
       title: "Strong Evidence",
-      result: calculateConfidence({
-        evidenceQuality: 96,
-        evidenceAgreement: 94,
-        evidenceFreshness: 98,
-        supportingEvidence: 91,
-        historicalAccuracy: 89,
-      }),
+      evidence: strongEvidence,
+      result: calculateConfidence(buildConfidenceFactors(strongEvidence)),
     },
     {
       title: "Mixed Evidence",
-      result: calculateConfidence({
-        evidenceQuality: 72,
-        evidenceAgreement: 65,
-        evidenceFreshness: 82,
-        supportingEvidence: 68,
-        historicalAccuracy: 74,
-      }),
+      evidence: mixedEvidence,
+      result: calculateConfidence(buildConfidenceFactors(mixedEvidence)),
     },
     {
       title: "Weak Evidence",
-      result: calculateConfidence({
-        evidenceQuality: 42,
-        evidenceAgreement: 38,
-        evidenceFreshness: 55,
-        supportingEvidence: 45,
-        historicalAccuracy: 48,
-      }),
+      evidence: weakEvidence,
+      result: calculateConfidence(buildConfidenceFactors(weakEvidence)),
     },
   ];
 
@@ -96,6 +88,20 @@ export default function MBIEPage() {
               </h3>
 
               <ConfidenceCard result={scenario.result} />
+              <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+                <summary className="cursor-pointer font-bold text-cyan-300">
+                  View evidence ({scenario.evidence.length})
+                </summary>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  {scenario.evidence.map((evidence) => (
+                    <ConfidenceEvidenceCard
+                      key={evidence.id}
+                      evidence={evidence}
+                    />
+                  ))}
+                </div>
+              </details>
             </div>
           ))}
         </div>

@@ -14,14 +14,20 @@ export function buildEvidence(
 
   const change = Number((current - previous).toFixed(1));
 
-  const direction: Evidence["direction"] =
-    change > 0
-      ? "improving"
-      : change < 0
-      ? "weakening"
-      : "unchanged";
+  let direction: Evidence["direction"];
 
-  const aboveThreshold = current >= rule.threshold;
+  if (change === 0) {
+    direction = "unchanged";
+  } else if (rule.higherIsBetter) {
+    direction =
+      change > 0 ? "improving" : "weakening";
+  } else {
+    direction =
+      change < 0 ? "improving" : "weakening";
+  }
+
+  const aboveThreshold =
+    current >= rule.threshold;
 
   const status = aboveThreshold
     ? rule.statusAbove
@@ -37,7 +43,7 @@ export function buildEvidence(
     direction === "improving"
       ? "improving compared with the previous release."
       : direction === "weakening"
-      ? "weaker than the previous release."
+      ? "weakening compared with the previous release."
       : "unchanged from the previous release."
   }`;
 

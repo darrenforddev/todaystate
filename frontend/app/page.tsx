@@ -20,6 +20,7 @@ import {
   getManufacturingSummary,
   getServicesSummary,
 } from "../repositories/evidenceRepository";
+import { macroEvidence, macroState } from "../engine/macroEvidence";
 
 export default function Home() {
   const [showWhy, setShowWhy] = useState(false);
@@ -68,6 +69,83 @@ export default function Home() {
       <div className="mx-auto max-w-[1600px] px-6 py-8">
         <MorningEdition />
 
+        <section className="mt-8 rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-8">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
+                Where are we today?
+              </p>
+
+              <h2 className="mt-3 text-4xl font-black text-white">
+                {macroState.direction}
+              </h2>
+
+              <p className="mt-3 text-slate-400">{macroState.explanation}</p>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="rounded-2xl bg-emerald-400/10 px-6 py-4 text-center">
+                <p className="text-3xl font-black text-emerald-300">
+                  {macroState.supportive.length}
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-emerald-400">
+                  Supportive
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-red-400/10 px-6 py-4 text-center">
+                <p className="text-3xl font-black text-red-300">
+                  {macroState.contradictory.length}
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-red-400">
+                  Headwinds
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {macroEvidence.map((indicator) => (
+              <div
+                key={indicator.id}
+                className="rounded-2xl border border-white/5 bg-white/[0.025] p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-white">{indicator.name}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {indicator.source}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                      indicator.signal === "supportive"
+                        ? "bg-emerald-400"
+                        : indicator.signal === "contradictory"
+                          ? "bg-red-400"
+                          : "bg-slate-400"
+                    }`}
+                  />
+                </div>
+
+                <p
+                  className={`mt-4 text-xs font-bold uppercase tracking-wider ${
+                    indicator.signal === "supportive"
+                      ? "text-emerald-300"
+                      : indicator.signal === "contradictory"
+                        ? "text-red-300"
+                        : "text-slate-400"
+                  }`}
+                >
+                  {indicator.signal === "contradictory"
+                    ? "Headwind"
+                    : indicator.signal}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
         <div className="mt-8">
           <section className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
             <div>
@@ -147,13 +225,13 @@ export default function Home() {
                 </div>
               </article>
             </section>
-            <CountdownCard
-              title="Next Major Event"
-              event="US Manufacturing PMI"
-              targetDate="2026-08-03T15:00:00+01:00"
-            />
-
             <aside className="space-y-6">
+              <CountdownCard
+                title="Next Major Event"
+                event="US Manufacturing PMI"
+                targetDate="2026-08-03T15:00:00+01:00"
+              />
+
               <article className="rounded-3xl border border-white/5 bg-[#0a1626] p-6">
                 <p className="text-sm uppercase tracking-widest text-slate-500">
                   Hot Themes

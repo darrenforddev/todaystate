@@ -2,7 +2,7 @@ import { calculateThemeScore } from "./scoring";
 import { calculateThemeConfidence } from "./confidence";
 import { themes } from "@/data/themes";
 import { getThemeEvidence } from "./query";
-import { getThemeReasoning } from "./reasoning";
+import { getThemeReasoning } from "./reasoningLegacy";
 
 export interface ThemeIntelligence {
   id: string;

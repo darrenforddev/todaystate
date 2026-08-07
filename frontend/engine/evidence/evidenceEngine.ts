@@ -26,19 +26,16 @@ export function buildEvidence(
       change < 0 ? "improving" : "weakening";
   }
 
-  const aboveThreshold =
-    current >= rule.threshold;
+  const aboveReference =
+  rule.assessmentMode === "change"
+    ? current >= previous
+    : current >= rule.threshold;
 
-  const status = aboveThreshold
-    ? rule.statusAbove
-    : rule.statusBelow;
-
-  const impact = aboveThreshold
-    ? rule.impactAbove
-    : rule.impactBelow;
+const status = aboveReference ? rule.statusAbove : rule.statusBelow;
+const impact = aboveReference ? rule.impactAbove : rule.impactBelow;
 
   const explanation = `Current value ${current} is ${
-    aboveThreshold ? "above" : "below"
+    aboveReference ? "above" : "below"
   } the threshold of ${rule.threshold} and is ${
     direction === "improving"
       ? "improving compared with the previous release."

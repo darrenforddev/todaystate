@@ -5,6 +5,12 @@ import ThemeCard from "@/components/mbie/ThemeCard";
 import ReasoningCard from "@/components/mbie/ReasoningCard";
 import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
 import SystemStatus from "@/components/mbie/SystemStatus";
+import ConfidenceCard from "@/components/mbie/ConfidenceCard";
+
+import {
+  calculateConfidence,
+  sampleConfidenceFactors,
+} from "@/engine/confidence/index";
 
 import { buildEvidence, manufacturingSample } from "@/engine/evidence";
 import { getThemeIntelligence } from "@/engine/themeEngine";
@@ -17,6 +23,7 @@ export default function MBIEStudioPage() {
   );
 
   const theme = getThemeIntelligence("industrial-recovery");
+  const confidence = calculateConfidence(sampleConfidenceFactors);
 
   if (!theme) {
     return (
@@ -72,6 +79,9 @@ export default function MBIEStudioPage() {
           />
 
           <SystemStatus />
+          <div className="mt-8">
+            <ConfidenceCard result={confidence} />
+          </div>
         </div>
       </div>
     </main>

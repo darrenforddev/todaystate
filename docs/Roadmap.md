@@ -23,26 +23,39 @@
 
 # Phase 2 - Dashboard
 
-- [ ] Hero component
-- [ ] CalendarCard
-- [ ] HotThemes component
-- [ ] Footer component
-- [ ] ExplainScore panel
+- [x] Hero component
+- [x] CalendarCard
+- [x] HotThemes component
+- [x] Footer component
+- [x] ExplainScore panel
 - [ ] Animated Bull/Bear Gauge
-- [ ] Confidence Indicator
-- [ ] Data Freshness badge
+- [x] Confidence Indicator
+- [x] Data Freshness badge
+- [x] Morning Edition
+- [x] WorldPulse v1
+- [x] TodayState UI Kit foundation
 
 ---
 
 # Phase 3 - Market Intelligence
 
-- [ ] WHY Engine
+- [x] WHY Engine
 - [ ] Confidence Engine
-- [ ] Evidence Engine
+- [x] Evidence Engine
 - [ ] Historical Comparisons
 - [ ] Sector Rotation
-- [ ] Theme Strength
+- [x] Theme Strength
 - [ ] Market Regime Detection
+- [x] Knowledge Layer
+- [x] Theme Engine
+- [x] Reasoning Engine
+- [x] Integrated reasoning pipeline
+- [x] MBIE Studio Alpha
+- [ ] Narrative Engine
+- [ ] Snapshot Engine
+- [ ] Comparison Engine
+- [ ] Report Engine
+- [ ] Notification Engine
 
 ---
 
@@ -56,10 +69,31 @@
 - [ ] Interest Rates
 - [ ] Corporate Earnings
 - [ ] FRED Integration
+- [x] Evidence Repository foundation
+- [x] Indicator knowledge model
 
 ---
 
-# Phase 5 - Companies
+# Phase 5 - MBIE Studio
+
+- [x] Studio Header
+- [x] Intelligence Pipeline
+- [x] Evidence Card
+- [x] Theme Card
+- [x] Reasoning Card
+- [x] Evidence test page
+- [x] Theme test page
+- [x] Reasoning test page
+- [ ] Today's Intelligence panel
+- [ ] System Status panel
+- [ ] Confidence Card
+- [ ] Narrative Card
+- [ ] Snapshot Timeline
+- [ ] Recent Engine Activity
+
+---
+
+# Phase 6 - Companies
 
 - [ ] Company Dashboard
 - [ ] Financial Reports
@@ -67,10 +101,13 @@
 - [ ] AI Company Summary
 - [ ] Financial Ratios
 - [ ] Dividend Analysis
+- [ ] Company Risk Analysis
+- [ ] Company Theme Exposure
+- [ ] MBIE Company Intelligence
 
 ---
 
-# Phase 6 - AI
+# Phase 7 - AI
 
 - [ ] Explain Score
 - [ ] Explain Stock
@@ -80,11 +117,10 @@
 
 ---
 
-# Phase 7 - Premium
+# Phase 8 - Premium
 
 - [ ] User Accounts
 - [ ] Watchlists
 - [ ] Saved Dashboards
 - [ ] Alerts
 - [ ] Mobile Optimisation
-      npm

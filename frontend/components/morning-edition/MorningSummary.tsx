@@ -1,7 +1,8 @@
 import { getMarketExplanation } from "@/engine/explainEngine";
+import { macroEvidence } from "@/engine/macroEvidence";
 
 export default function MorningSummary() {
-  const explanation = getMarketExplanation();
+  const explanation = getMarketExplanation(macroEvidence);
 
   return (
     <div className="mt-8 space-y-6">

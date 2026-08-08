@@ -1,9 +1,10 @@
 import { getMarketExplanation } from "@/engine/explainEngine";
+import { macroEvidence } from "@/engine/macroEvidence";
 import { getManufacturingSummary } from "@/repositories/evidenceRepository";
 import { getServicesSummary } from "@/repositories/evidenceRepository";
 
 export default function MBIEDaily() {
-  const explanation = getMarketExplanation();
+  const explanation = getMarketExplanation(macroEvidence);
 
   const manufacturing = getManufacturingSummary();
   const services = getServicesSummary();

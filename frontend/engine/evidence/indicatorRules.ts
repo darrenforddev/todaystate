@@ -1,4 +1,4 @@
-import { Status, Impact } from "./types";
+import type { Status, Impact } from "./types";
 
 export interface IndicatorRule {
   assessmentMode?: "threshold" | "change";
@@ -42,7 +42,7 @@ export const indicatorRules: Record<string, IndicatorRule> = {
   },
 
   "nonfarm-payrolls": {
-    assessmentMode: "threshold",
+    assessmentMode: "change",
     threshold: 0,
 
     higherIsBetter: true,
@@ -55,16 +55,16 @@ export const indicatorRules: Record<string, IndicatorRule> = {
   },
 
   "cpi-inflation": {
-    assessmentMode: "threshold",
+    assessmentMode: "change",
     threshold: 2,
 
     higherIsBetter: false,
 
-    statusAbove: "contraction",
-    statusBelow: "expansion",
+    statusAbove: "expansion",
+    statusBelow: "contraction",
 
-    impactAbove: "negative",
-    impactBelow: "positive",
+    impactAbove: "positive",
+    impactBelow: "negative",
   },
 
   "building-permits": {

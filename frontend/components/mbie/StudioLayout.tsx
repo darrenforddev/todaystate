@@ -5,7 +5,6 @@ import ThemeCard from "./ThemeCard";
 import ReasoningCard from "./ReasoningCard";
 
 import { buildEvidence, manufacturingSample } from "@/engine/evidence";
-
 import { getThemeIntelligence } from "@/engine/themeEngine";
 
 export default function StudioLayout() {
@@ -17,9 +16,19 @@ export default function StudioLayout() {
 
   const theme = getThemeIntelligence("industrial-recovery");
 
+  if (!theme) {
+    return (
+      <div className="rounded-2xl border border-red-400/20 bg-red-400/5 p-6 text-red-300">
+        Industrial Recovery theme intelligence could not be found.
+      </div>
+    );
+  }
+
+  const relationshipStrength = Math.round(theme.averageRelationshipStrength);
+
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      <StudioHeader version="0.1 Alpha" />
+    <div>
+      <StudioHeader version="0.1.0" />
 
       <Pipeline />
 
@@ -38,7 +47,7 @@ export default function StudioLayout() {
         <ThemeCard
           name={theme.theme.name}
           description={theme.theme.description}
-          strength={theme.relationshipStrength}
+          strength={relationshipStrength}
         />
       </div>
 
@@ -46,7 +55,7 @@ export default function StudioLayout() {
         indicator="Manufacturing PMI"
         status={evidence.status}
         theme={theme.theme.name}
-        strength={theme.relationshipStrength}
+        strength={relationshipStrength}
       />
     </div>
   );

@@ -1,7 +1,10 @@
 import type { Evidence } from "../evidence/types";
 import type { EvidenceSourceType } from "./confidenceSourceRules";
 import type { HistoricalPerformance } from "./historicalPerformance";
-import type { ConfidenceEvidence } from "./confidenceEvidence";
+import type {
+  ConfidenceEvidence,
+  EvidenceUnit,
+} from "./confidenceEvidence";
 import {
   deriveEvidenceSignal,
   type SupportiveImpact,
@@ -16,6 +19,9 @@ export interface ConfidenceEvidenceMetadata {
 
   observedAt: string;
   maxAgeDays: number;
+
+  unit?: EvidenceUnit;
+  explanation?: string;
 
   historicalPerformance?: HistoricalPerformance;
 }
@@ -35,10 +41,22 @@ export function convertToConfidenceEvidence(
       metadata.supportiveImpact
     ),
 
+    current: evidence.current,
+    previous: evidence.previous,
+    change: evidence.change,
+
+    unit: metadata.unit,
+
+    direction: evidence.direction,
+    status: evidence.status,
+    impact: evidence.impact,
+
+    explanation:
+      metadata.explanation ?? evidence.explanation,
+
     observedAt: metadata.observedAt,
     maxAgeDays: metadata.maxAgeDays,
 
-    historicalPerformance:
-      metadata.historicalPerformance,
+    historicalPerformance: metadata.historicalPerformance,
   };
 }

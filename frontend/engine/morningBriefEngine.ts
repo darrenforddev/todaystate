@@ -1,3 +1,6 @@
+import type {
+  ConfidenceEvidence,
+} from "./confidence/confidenceEvidence";
 import { getMarketExplanation } from "./explainEngine";
 
 export interface MorningBrief {
@@ -10,8 +13,11 @@ export interface MorningBrief {
   focus: string;
 }
 
-export function getMorningBrief(): MorningBrief {
-  const explanation = getMarketExplanation();
+export function getMorningBrief(
+  evidenceRecords: ConfidenceEvidence[],
+): MorningBrief {
+  const explanation =
+    getMarketExplanation(evidenceRecords);
 
   return {
     headline: "Expansion Continues",

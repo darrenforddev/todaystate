@@ -9,11 +9,29 @@ export interface SearchResult {
   href: string;
 }
 
-export function search(query: string): SearchResult[] {
-  const q = query.toLowerCase();
+function formatIndicatorTitle(
+  indicatorId: string,
+): string {
+  return indicatorId
+    .replace(/-\w+-\d{4}$/, "")
+    .split("-")
+    .map(
+      (word) =>
+        word.charAt(0).toUpperCase() +
+        word.slice(1),
+    )
+    .join(" ");
+}
+
+export function search(
+  query: string,
+): SearchResult[] {
+  const q = query.trim().toLowerCase();
 
   const themeResults = themes
-    .filter((item) => item.name.toLowerCase().includes(q))
+    .filter((item) =>
+      item.name.toLowerCase().includes(q),
+    )
     .map((item) => ({
       id: item.id,
       title: item.name,
@@ -22,7 +40,9 @@ export function search(query: string): SearchResult[] {
     }));
 
   const companyResults = companies
-    .filter((item) => item.name.toLowerCase().includes(q))
+    .filter((item) =>
+      item.name.toLowerCase().includes(q),
+    )
     .map((item) => ({
       id: item.id,
       title: item.name,
@@ -31,12 +51,22 @@ export function search(query: string): SearchResult[] {
     }));
 
   const evidenceResults = evidence
-    .filter((item) => item.title.toLowerCase().includes(q))
     .map((item) => ({
-      id: item.id,
-      title: item.title,
+      item,
+      title: formatIndicatorTitle(
+        item.indicatorId,
+      ),
+    }))
+    .filter(
+      ({ item, title }) =>
+        title.toLowerCase().includes(q) ||
+        item.explanation.toLowerCase().includes(q),
+    )
+    .map(({ item, title }) => ({
+      id: item.indicatorId,
+      title,
       type: "evidence" as const,
-      href: `/evidence/${item.id}`,
+      href: `/evidence/${item.indicatorId}`,
     }));
 
   return [

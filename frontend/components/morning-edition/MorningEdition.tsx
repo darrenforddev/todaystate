@@ -1,7 +1,12 @@
+import type { ConfidenceEvidence } from "@/engine/confidence/confidenceEvidence";
 import { getMorningBrief } from "@/engine/morningBriefEngine";
 
-export default function MorningSummary() {
-  const brief = getMorningBrief();
+interface MorningEditionProps {
+  macroEvidence: ConfidenceEvidence[];
+}
+
+export default function MorningEdition({ macroEvidence }: MorningEditionProps) {
+  const brief = getMorningBrief(macroEvidence);
 
   return (
     <div className="mt-8 space-y-6">

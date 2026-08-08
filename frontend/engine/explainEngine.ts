@@ -1,5 +1,6 @@
-import { getManufacturingSummary } from "@/repositories/evidenceRepository";
-import { getServicesSummary } from "@/repositories/evidenceRepository";
+import type {
+  ConfidenceEvidence,
+} from "@/engine/confidence/confidenceEvidence";
 
 export interface MarketExplanation {
   headline: string;
@@ -8,47 +9,96 @@ export interface MarketExplanation {
   conclusion: string;
 }
 
-export function getMarketExplanation(): MarketExplanation {
-  const manufacturing = getManufacturingSummary();
-  const services = getServicesSummary();
+function countSignals(evidenceRecords: ConfidenceEvidence[]) {
+  const supportiveCount = evidenceRecords.filter(
+    (evidence) => evidence.signal === "supportive",
+  ).length;
 
-  const positives: string[] = [];
-  const negatives: string[] = [];
-
-  if (manufacturing) {
-    if (manufacturing.change > 0) {
-      positives.push(
-        `Manufacturing PMI improved by ${manufacturing.change.toFixed(1)} points.`
-      );
-    }
-
-    if (manufacturing.status === "Expansion") {
-      positives.push("Manufacturing remains in expansion.");
-    }
-  }
-
-  if (services) {
-    if (services.change > 0) {
-      positives.push(
-        `Services PMI improved by ${services.change.toFixed(1)} points.`
-      );
-    }
-
-    if (services.status === "Expansion") {
-      positives.push("Services sector remains in expansion.");
-    }
-  }
-
-  negatives.push("Inflation pressures remain elevated.");
+  const headwindCount = evidenceRecords.filter(
+    (evidence) => evidence.signal === "contradictory",
+  ).length;
 
   return {
-    headline: "Economic momentum remains supportive.",
+    supportiveCount,
+    headwindCount,
+  };
+}
 
+function buildHeadline(
+  evidenceRecords: ConfidenceEvidence[],
+): string {
+  const {
+    supportiveCount,
+    headwindCount,
+  } = countSignals(evidenceRecords);
+
+  if (supportiveCount > headwindCount) {
+    return "Economic momentum remains supportive overall.";
+  }
+
+  if (headwindCount > supportiveCount) {
+    return "Economic momentum is facing material headwinds.";
+  }
+
+  return "Economic signals are currently balanced.";
+}
+
+function buildConclusion(
+  evidenceRecords: ConfidenceEvidence[],
+): string {
+  const {
+    supportiveCount,
+    headwindCount,
+  } = countSignals(evidenceRecords);
+
+  if (supportiveCount > headwindCount) {
+    return (
+      `Current evidence remains supportive overall, with ` +
+      `${supportiveCount} supportive signals against ` +
+      `${headwindCount} headwinds. Employment momentum and housing ` +
+      `activity require monitoring, while inflation is falling but ` +
+      `remains above target.`
+    );
+  }
+
+  if (headwindCount > supportiveCount) {
+    return (
+      `Current evidence is tilted towards caution, with ` +
+      `${headwindCount} headwinds against ` +
+      `${supportiveCount} supportive signals.`
+    );
+  }
+
+  return (
+    `Current evidence is evenly balanced, with ` +
+    `${supportiveCount} supportive signals and ` +
+    `${headwindCount} headwinds.`
+  );
+}
+
+export function getMarketExplanation(
+  evidenceRecords: ConfidenceEvidence[],
+): MarketExplanation {
+  const positives = evidenceRecords
+    .filter((evidence) => evidence.signal === "supportive")
+    .map(
+      (evidence) =>
+        evidence.explanation ??
+        `${evidence.name} is providing a supportive signal.`,
+    );
+
+  const negatives = evidenceRecords
+    .filter((evidence) => evidence.signal === "contradictory")
+    .map(
+      (evidence) =>
+        evidence.explanation ??
+        `${evidence.name} is acting as a macroeconomic headwind.`,
+    );
+
+  return {
+    headline: buildHeadline(evidenceRecords),
     positives,
-
     negatives,
-
-    conclusion:
-      "Current evidence supports continued economic expansion, although inflation remains the principal headwind.",
+    conclusion: buildConclusion(evidenceRecords),
   };
 }

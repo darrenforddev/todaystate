@@ -1,8 +1,16 @@
-import InsightCard from "../ui/InsightCard";
+import type { ConfidenceEvidence } from "@/engine/confidence/confidenceEvidence";
 import { getMorningBrief } from "@/engine/morningBriefEngine";
 
-export default function MorningOpportunity() {
-  const brief = getMorningBrief();
+import InsightCard from "../ui/InsightCard";
+
+interface MorningOpportunityProps {
+  macroEvidence: ConfidenceEvidence[];
+}
+
+export default function MorningOpportunity({
+  macroEvidence,
+}: MorningOpportunityProps) {
+  const brief = getMorningBrief(macroEvidence);
 
   return (
     <InsightCard

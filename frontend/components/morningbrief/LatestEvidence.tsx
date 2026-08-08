@@ -1,45 +1,44 @@
 import { evidence } from "@/data/evidence";
-import IntelligenceBar from "@/components/ui/IntelligenceBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 
+function formatIndicatorName(indicatorId: string): string {
+  return indicatorId
+    .replace(/-\w+-\d{4}$/, "")
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function LatestEvidence() {
-  const latest = [...evidence]
-    .sort(
-      (a, b) =>
-        new Date(b.releasedAt).getTime() - new Date(a.releasedAt).getTime(),
-    )
-    .slice(0, 5);
+  const latest = evidence.slice(0, 5);
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4">
       {latest.map((item) => (
-        <div
-          key={item.id}
-          className="rounded-2xl border border-white/5 bg-[#0a1626] p-5"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">{item.title}</h3>
+        <div key={item.indicatorId} className="rounded-2xl bg-white/[0.03] p-5">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="font-semibold text-white">
+              {formatIndicatorName(item.indicatorId)}
+            </h3>
 
-            <span className="text-cyan-300 font-semibold">
-              {item.latestValue}
+            <span className="font-semibold text-cyan-300">
+              {item.current.toFixed(1)}
             </span>
           </div>
 
-          <p className="mt-3 text-slate-400">{item.interpretation}</p>
-
-          <div className="mt-5">
-            <IntelligenceBar value={item.weight} max={10} label="Importance" />
-          </div>
+          <p className="mt-3 text-slate-400">{item.explanation}</p>
 
           <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
-            <span>Previous: {item.previousValue}</span>
+            <span>Previous: {item.previous.toFixed(1)}</span>
 
             <StatusBadge
-              text={item.trend.charAt(0).toUpperCase() + item.trend.slice(1)}
+              text={
+                item.direction.charAt(0).toUpperCase() + item.direction.slice(1)
+              }
               variant={
-                item.trend === "improving"
+                item.impact === "positive"
                   ? "positive"
-                  : item.trend === "weakening"
+                  : item.impact === "negative"
                     ? "negative"
                     : "neutral"
               }

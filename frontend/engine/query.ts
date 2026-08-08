@@ -1,45 +1,80 @@
 import { evidence } from "@/data/evidence";
-import { relationships } from "./relationships";
 
-export function getEvidence(id: string) {
-  return evidence.find((item) => item.id === id);
+import {
+  relationships,
+  type RelationshipDirection,
+} from "./relationships";
+
+export function getEvidence(indicatorId: string) {
+  return evidence.find(
+    (item) => item.indicatorId === indicatorId,
+  );
 }
 
 export function getRelationships(evidenceId: string) {
   return relationships.filter(
-    (relationship) => relationship.evidenceId === evidenceId
+    (relationship) =>
+      relationship.evidenceId === evidenceId,
   );
 }
 
 export function getRelatedThemes(evidenceId: string) {
   return getRelationships(evidenceId).filter(
-    (relationship) => relationship.targetType === "theme"
+    (relationship) =>
+      relationship.targetType === "theme",
   );
 }
 
 export function getRelatedCompanies(evidenceId: string) {
   return getRelationships(evidenceId).filter(
-    (relationship) => relationship.targetType === "company"
+    (relationship) =>
+      relationship.targetType === "company",
   );
 }
 
 export function getRelatedETFs(evidenceId: string) {
   return getRelationships(evidenceId).filter(
-    (relationship) => relationship.targetType === "etf"
+    (relationship) =>
+      relationship.targetType === "etf",
   );
 }
 
-export function getThemeEvidence(themeId: string) {
+function formatIndicatorTitle(
+  indicatorId: string,
+): string {
+  return indicatorId
+    .replace(/-\w+-\d{4}$/, "")
+    .split("-")
+    .map(
+      (word) =>
+        word.charAt(0).toUpperCase() +
+        word.slice(1),
+    )
+    .join(" ");
+}
+
+export interface ThemeEvidenceResult {
+  id: string;
+  title: string;
+  weight: number;
+  direction: RelationshipDirection;
+}
+
+export function getThemeEvidence(
+  themeId: string,
+): ThemeEvidenceResult[] {
   const themeRelationships = relationships.filter(
     (relationship) =>
       relationship.targetType === "theme" &&
-      relationship.targetId === themeId
+      relationship.targetId === themeId,
   );
 
   return themeRelationships
     .map((relationship) => {
       const evidenceItem = evidence.find(
-        (item) => item.id === relationship.evidenceId
+        (item) =>
+          item.indicatorId ===
+          relationship.evidenceId,
       );
 
       if (!evidenceItem) {
@@ -47,28 +82,18 @@ export function getThemeEvidence(themeId: string) {
       }
 
       return {
-        id: evidenceItem.id,
-        title: evidenceItem.title,
-        weight: evidenceItem.weight,
-        latestValue: evidenceItem.latestValue,
-        previousValue: evidenceItem.previousValue,
-        trend: evidenceItem.trend,
-        interpretation: evidenceItem.interpretation,
-        releasedAt: evidenceItem.releasedAt,
+        id: evidenceItem.indicatorId,
+        title: formatIndicatorTitle(
+          evidenceItem.indicatorId,
+        ),
+        weight: relationship.strength,
+        direction: relationship.direction,
       };
     })
     .filter(
       (
-        item
-      ): item is {
-        id: string;
-        title: string;
-        weight: number;
-        latestValue: number;
-        previousValue: number;
-        trend: "improving" | "stable" | "weakening";
-        interpretation: string;
-        releasedAt: string;
-      } => item !== null
+        item,
+      ): item is ThemeEvidenceResult =>
+        item !== null,
     );
 }

@@ -6,6 +6,12 @@ export type EvidenceSignal =
   | "contradictory"
   | "neutral";
 
+export type EvidenceUnit =
+  | "index"
+  | "thousands"
+  | "percent"
+  | "millions";
+
 export interface ConfidenceEvidence {
   id: string;
   name: string;
@@ -14,9 +20,21 @@ export interface ConfidenceEvidence {
 
   signal: EvidenceSignal;
 
+  current?: number;
+  previous?: number;
+  change?: number;
+
+  unit?: EvidenceUnit;
+
+  direction?: "improving" | "weakening" | "unchanged";
+  status?: "expansion" | "contraction" | "neutral";
+  impact?: "positive" | "negative" | "neutral";
+
+  explanation?: string;
+
   quality?: number;
   historicalAccuracy?: number;
-historicalPerformance?: HistoricalPerformance;
+  historicalPerformance?: HistoricalPerformance;
 
   // Temporary fallback while older evidence is migrated.
   freshness?: number;

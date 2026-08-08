@@ -85,6 +85,11 @@ export default async function ThemePage({ params }: ThemePageProps) {
             <p className="mt-3 text-5xl font-black text-white">
               {theme.conviction}%
             </p>
+
+            <p className="mt-4 text-sm leading-6 text-slate-400">
+              How strongly the balance of supportive and contradictory evidence
+              supports this theme.
+            </p>
           </section>
 
           <section className="rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-6">
@@ -94,6 +99,11 @@ export default async function ThemePage({ params }: ThemePageProps) {
 
             <p className="mt-3 text-5xl font-black text-cyan-300">
               {theme.confidence}%
+            </p>
+
+            <p className="mt-4 text-sm leading-6 text-slate-400">
+              How reliable the conclusion is, based on source quality,
+              agreement, freshness, coverage, and historical accuracy.
             </p>
           </section>
 
@@ -109,8 +119,42 @@ export default async function ThemePage({ params }: ThemePageProps) {
             >
               {theme.signal}
             </p>
+
+            <p className="mt-4 text-sm leading-6 text-slate-400">
+              The plain-language interpretation of the current conviction score.
+            </p>
           </section>
         </div>
+
+        <section className="mt-8 rounded-3xl border border-white/10 bg-[#0a1626] p-8">
+          <h2 className="text-2xl font-bold">Understanding the Scores</h2>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-[#07111f] p-5">
+              <p className="font-bold text-white">Conviction asks:</p>
+
+              <p className="mt-2 leading-7 text-slate-300">
+                How strongly does the available evidence support the investment
+                theme?
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-cyan-400/20 bg-[#07111f] p-5">
+              <p className="font-bold text-cyan-300">Confidence asks:</p>
+
+              <p className="mt-2 leading-7 text-slate-300">
+                How much should we trust that conclusion given the quality and
+                consistency of the evidence?
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm leading-6 text-slate-400">
+            A theme can have high conviction but lower confidence when the
+            directional signal is strong but the evidence is limited, old,
+            conflicting, or historically less reliable.
+          </p>
+        </section>
 
         <section className="mt-8 rounded-3xl border border-white/10 bg-[#0a1626] p-8">
           <h2 className="text-2xl font-bold">Evidence Assessment</h2>

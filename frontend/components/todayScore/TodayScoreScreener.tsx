@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import CompanyLogo from "@/components/company/CompanyLogo";
 import type { TodayScoreTestResult } from "@/engine/todayScore/todayScoreTest";
 import type {
   ScreenerCompanyMetadata,
@@ -251,6 +252,10 @@ export default function TodayScoreScreener({
                     <td className="px-5 py-5">
                       <div className="flex items-center gap-3">
                         <span className="w-5 text-xs font-bold text-slate-600">{index + 1}</span>
+                        <CompanyLogo
+                          companyName={company.companyName}
+                          domain={company.brandDomain}
+                        />
                         <div className="min-w-0 flex-1">
                           <Link
                             href={reportHref}

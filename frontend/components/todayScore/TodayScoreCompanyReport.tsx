@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import CompanyLogo from "@/components/company/CompanyLogo";
 import type {
   ScreenerDecision,
   ThemeAlignment,
@@ -264,23 +265,30 @@ export default function TodayScoreCompanyReport({
         </Link>
 
         <header className="mt-6 flex flex-col gap-6 border-b border-slate-800 pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-300">
-                {company.ticker}
+          <div className="flex items-start gap-4 md:gap-5">
+            <CompanyLogo
+              companyName={company.companyName}
+              domain={company.brandDomain}
+              size="large"
+            />
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-300">
+                  {company.ticker}
+                </p>
+                <span
+                  className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase ${decisionStyles[company.decision]}`}
+                >
+                  {company.decision} research candidate
+                </span>
+              </div>
+              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
+                {company.companyName}
+              </h1>
+              <p className="mt-3 text-sm text-slate-400">
+                {company.sector} · {company.industry} · Global comparison universe
               </p>
-              <span
-                className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase ${decisionStyles[company.decision]}`}
-              >
-                {company.decision} research candidate
-              </span>
             </div>
-            <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">
-              {company.companyName}
-            </h1>
-            <p className="mt-3 text-sm text-slate-400">
-              {company.sector} · {company.industry} · Global comparison universe
-            </p>
           </div>
 
           <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] px-5 py-4 text-right">

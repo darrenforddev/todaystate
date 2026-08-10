@@ -7,6 +7,7 @@ export interface ScreenerCompanyMetadata {
   companyId: string;
   ticker: string;
   companyName: string;
+  brandDomain?: string;
   sector: string;
   industry: string;
   themeId: string;

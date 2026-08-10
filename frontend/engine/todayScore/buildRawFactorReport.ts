@@ -13,16 +13,31 @@ import type {
   TodayScoreDataset,
 } from "./providers/types";
 import type { TodayScorePillar } from "./types";
+import {
+  quoteToFinancialScale,
+  validateMarketValues,
+  valuesReconcile,
+  type MarketValueValidation,
+} from "./unitValidation";
 import { valueFactorDefinitions } from "./valueFactors";
 
 type JsonRecord = Record<string, unknown>;
 
-interface FactorSeed {
+interface AvailableFactorSeed {
+  status: "available";
   rawValue: number;
   unit: RawFactorUnit;
   explanation: string;
   evidence: RawFactorEvidence[];
 }
+
+interface RejectedFactorSeed {
+  status: "rejected";
+  explanation: string;
+  evidence: RawFactorEvidence[];
+}
+
+type FactorSeed = AvailableFactorSeed | RejectedFactorSeed;
 
 interface PricePoint {
   date: string;
@@ -95,6 +110,18 @@ function safeDivide(
     denominator === 0
     ? undefined
     : numerator / denominator;
+}
+
+function firstNumber(value: unknown, paths: readonly string[]): number | undefined {
+  for (const path of paths) {
+    const candidate = readNumber(value, path);
+
+    if (candidate !== undefined) {
+      return candidate;
+    }
+  }
+
+  return undefined;
 }
 
 function percentageChange(
@@ -205,8 +232,22 @@ function addSeed(
   }
 
   seeds.set(factorId, {
+    status: "available",
     rawValue: round(rawValue),
     unit,
+    explanation,
+    evidence,
+  });
+}
+
+function rejectSeed(
+  seeds: Map<string, FactorSeed>,
+  factorId: string,
+  explanation: string,
+  evidence: RawFactorEvidence[],
+): void {
+  seeds.set(factorId, {
+    status: "rejected",
     explanation,
     evidence,
   });
@@ -269,8 +310,44 @@ function balanceDebt(record: JsonRecord | undefined): number | undefined {
   return (shortTermDebt ?? 0) + (longTermDebt ?? 0);
 }
 
+function marketValueValidationFor(
+  results: readonly ProviderDatasetResult[],
+): MarketValueValidation {
+  const priceResult = resultFor(results, "price-history");
+  const statisticsResult = resultFor(results, "statistics");
+  const incomeResult = resultFor(results, "income-statement");
+  const statistics = statisticsResult?.payload
+    ? readPath(statisticsResult.payload, "statistics")
+    : undefined;
+  const financials = readPath(statistics, "financials");
+  const latestIncome = latestAnnualRecords(incomeResult)[0];
+  const latestPrice = pricePoints(priceResult).at(-1);
+
+  return validateMarketValues({
+    quoteCurrency: currencyFor(priceResult),
+    financialCurrency:
+      currencyFor(statisticsResult) ?? currencyFor(incomeResult),
+    latestClose: latestPrice?.close,
+    sharesOutstanding: firstNumber(financials, [
+      "balance_sheet.total_common_shares_outstanding",
+      "balance_sheet.shares_outstanding",
+    ]) ?? readNumber(latestIncome, "basic_shares_outstanding"),
+    reportedMarketCap: readNumber(
+      statistics,
+      "valuations_metrics.market_capitalization",
+    ),
+    reportedEnterpriseValue: readNumber(
+      statistics,
+      "valuations_metrics.enterprise_value",
+    ),
+    totalDebt: readNumber(financials, "balance_sheet.total_debt_mrq"),
+    totalCash: readNumber(financials, "balance_sheet.total_cash_mrq"),
+  });
+}
+
 function buildQualitySeeds(
   results: readonly ProviderDatasetResult[],
+  marketValues: MarketValueValidation,
 ): Map<string, FactorSeed> {
   const seeds = new Map<string, FactorSeed>();
   const statisticsResult = resultFor(results, "statistics");
@@ -413,7 +490,7 @@ function buildQualitySeeds(
     "liabilities.total_liabilities",
   );
   const sales = readNumber(latestIncome, "sales");
-  const marketCap = readNumber(statistics, "valuations_metrics.market_capitalization");
+  const marketCap = marketValues.marketCap;
   const altmanInputs = [
     totalAssets,
     currentAssets,
@@ -442,6 +519,15 @@ function buildQualitySeeds(
     "The public-company Altman Z formula using the latest annual statements and current market capitalisation.",
     combinedEvidence(incomeEvidence, balanceEvidence, statisticsEvidence),
   );
+
+  if (marketCap === undefined && altmanInputs.slice(0, -1).every((value) => value !== undefined)) {
+    rejectSeed(
+      seeds,
+      "altman-z-score",
+      `Rejected because the market-value component failed validation. ${marketValues.marketCapMessage}`,
+      combinedEvidence(incomeEvidence, balanceEvidence, statisticsEvidence),
+    );
+  }
 
   const revenueTtm = readNumber(financials, "income_statement.revenue_ttm");
   const freeCashFlowTtm = readNumber(
@@ -543,75 +629,268 @@ function buildQualitySeeds(
   return seeds;
 }
 
+const multipleUpperBounds: Record<string, number> = {
+  "price-to-earnings": 200,
+  "forward-price-to-earnings": 200,
+  "price-to-sales": 100,
+  "price-to-book": 100,
+  "enterprise-value-to-ebitda": 100,
+  "price-to-free-cash-flow": 250,
+  "enterprise-value-to-free-cash-flow": 250,
+};
+
+function addValidatedMultiple(
+  seeds: Map<string, FactorSeed>,
+  factorId: string,
+  reported: number | undefined,
+  derived: number | undefined,
+  quoteScale: number | undefined,
+  label: string,
+  evidence: RawFactorEvidence[],
+): void {
+  if (derived === undefined || !Number.isFinite(derived)) {
+    if (reported !== undefined) {
+      rejectSeed(
+        seeds,
+        factorId,
+        `Rejected because ${label} could not be independently recalculated from validated components.`,
+        evidence,
+      );
+    }
+    return;
+  }
+
+  const upperBound = multipleUpperBounds[factorId] ?? 250;
+
+  if (derived <= 0 || derived > upperBound) {
+    rejectSeed(
+      seeds,
+      factorId,
+      `Rejected by the valuation sanity check: the independently calculated ${label} was ${round(derived, 2)}×, outside the accepted positive range up to ${upperBound}×.`,
+      evidence,
+    );
+    return;
+  }
+
+  if (reported === undefined) {
+    addSeed(
+      seeds,
+      factorId,
+      derived,
+      "multiple",
+      `${label} was independently calculated from validated provider components because no provider multiple was available.`,
+      evidence,
+    );
+    return;
+  }
+
+  if (valuesReconcile(reported, derived)) {
+    addSeed(
+      seeds,
+      factorId,
+      derived,
+      "multiple",
+      `${label} was independently recalculated and reconciled with Twelve Data's reported multiple.`,
+      evidence,
+    );
+    return;
+  }
+
+  if (
+    quoteScale !== undefined &&
+    quoteScale !== 1 &&
+    valuesReconcile(reported * quoteScale, derived)
+  ) {
+    addSeed(
+      seeds,
+      factorId,
+      derived,
+      "multiple",
+      `${label} was normalised by the ${quoteScale} quote-to-financial currency scale and independently reconciled.`,
+      evidence,
+    );
+    return;
+  }
+
+  rejectSeed(
+    seeds,
+    factorId,
+    `Rejected because Twelve Data reported ${round(reported, 2)}× but the independently calculated ${label} was ${round(derived, 2)}×; the difference was not explained by the validated currency scale.`,
+    evidence,
+  );
+}
+
+function addSanityCheckedPercentage(
+  seeds: Map<string, FactorSeed>,
+  factorId: string,
+  rawValue: number | undefined,
+  explanation: string,
+  evidence: RawFactorEvidence[],
+): void {
+  if (rawValue === undefined) {
+    return;
+  }
+
+  if (!Number.isFinite(rawValue) || Math.abs(rawValue) > 100) {
+    rejectSeed(
+      seeds,
+      factorId,
+      `Rejected by the valuation sanity check because ${round(rawValue, 2)}% lies outside the accepted -100% to 100% range.`,
+      evidence,
+    );
+    return;
+  }
+
+  addSeed(seeds, factorId, rawValue, "percent", explanation, evidence);
+}
+
 function buildValueSeeds(
   results: readonly ProviderDatasetResult[],
+  marketValues: MarketValueValidation,
 ): Map<string, FactorSeed> {
   const seeds = new Map<string, FactorSeed>();
   const statisticsResult = resultFor(results, "statistics");
   const cashFlowResult = resultFor(results, "cash-flow");
   const balanceResult = resultFor(results, "balance-sheet");
+  const incomeResult = resultFor(results, "income-statement");
+  const priceResult = resultFor(results, "price-history");
+  const trendResult = resultFor(results, "eps-trend");
   const statistics = statisticsResult?.payload
     ? readPath(statisticsResult.payload, "statistics")
     : undefined;
   const financials = readPath(statistics, "financials");
   const statisticsDate = readString(financials, "most_recent_quarter");
   const statisticsEvidence = evidenceFor(statisticsResult, statisticsDate);
-  const metricPaths = [
-    ["price-to-earnings", "trailing_pe"],
-    ["forward-price-to-earnings", "forward_pe"],
-    ["price-to-sales", "price_to_sales_ttm"],
-    ["price-to-book", "price_to_book_mrq"],
-    ["enterprise-value-to-ebitda", "enterprise_to_ebitda"],
+  const balances = latestAnnualRecords(balanceResult);
+  const latestBalance = balances[0];
+  const trends = recordsFor(trendResult);
+  const currentYear = trends.find(
+    (record) => readString(record, "period") === "current_year",
+  );
+  const financialCurrency = marketValues.financialCurrency;
+  const epsScale = quoteToFinancialScale(
+    currencyFor(trendResult),
+    financialCurrency,
+  );
+  const currentEstimate = readNumber(currentYear, "current_estimate");
+  const normalisedEstimate =
+    currentEstimate !== undefined && epsScale !== undefined
+      ? currentEstimate * epsScale
+      : undefined;
+  const netIncomeTtm = readNumber(
+    financials,
+    "income_statement.net_income_to_common_ttm",
+  );
+  const revenueTtm = readNumber(financials, "income_statement.revenue_ttm");
+  const equity = firstNumber(financials, [
+    "balance_sheet.total_stockholder_equity_mrq",
+    "balance_sheet.total_shareholders_equity_mrq",
+  ]) ?? readNumber(
+    latestBalance,
+    "shareholders_equity.total_shareholders_equity",
+  );
+  const ebitda = readNumber(financials, "income_statement.ebitda");
+  const marketCap = marketValues.marketCap;
+  const enterpriseValue = marketValues.enterpriseValue;
+  const priceEvidence = evidenceFor(priceResult, pricePoints(priceResult).at(-1)?.date);
+  const incomeEvidence = evidenceFor(
+    incomeResult,
+    readString(latestAnnualRecords(incomeResult)[0], "fiscal_date"),
+  );
+  const balanceEvidence = evidenceFor(
+    balanceResult,
+    readString(latestBalance, "fiscal_date"),
+  );
+
+  const multiples = [
+    {
+      factorId: "price-to-earnings",
+      field: "trailing_pe",
+      derived: safeDivide(marketCap, netIncomeTtm),
+      label: "trailing P/E",
+      evidence: combinedEvidence(statisticsEvidence, incomeEvidence, priceEvidence),
+    },
+    {
+      factorId: "forward-price-to-earnings",
+      field: "forward_pe",
+      derived: safeDivide(
+        marketValues.latestPriceInFinancialCurrency,
+        normalisedEstimate,
+      ),
+      label: "forward P/E",
+      evidence: combinedEvidence(
+        statisticsEvidence,
+        priceEvidence,
+        evidenceFor(trendResult, readString(currentYear, "date")),
+      ),
+    },
+    {
+      factorId: "price-to-sales",
+      field: "price_to_sales_ttm",
+      derived: safeDivide(marketCap, revenueTtm),
+      label: "price-to-sales",
+      evidence: combinedEvidence(statisticsEvidence, priceEvidence),
+    },
+    {
+      factorId: "price-to-book",
+      field: "price_to_book_mrq",
+      derived: safeDivide(marketCap, equity),
+      label: "price-to-book",
+      evidence: combinedEvidence(statisticsEvidence, balanceEvidence, priceEvidence),
+    },
+    {
+      factorId: "enterprise-value-to-ebitda",
+      field: "enterprise_to_ebitda",
+      derived: safeDivide(enterpriseValue, ebitda),
+      label: "enterprise-value-to-EBITDA",
+      evidence: combinedEvidence(statisticsEvidence, priceEvidence),
+    },
   ] as const;
 
-  for (const [factorId, field] of metricPaths) {
-    addSeed(
+  for (const multiple of multiples) {
+    addValidatedMultiple(
       seeds,
-      factorId,
-      readNumber(statistics, `valuations_metrics.${field}`),
-      "multiple",
-      `Current ${field.replaceAll("_", " ")} reported by Twelve Data.`,
-      statisticsEvidence,
+      multiple.factorId,
+      readNumber(statistics, `valuations_metrics.${multiple.field}`),
+      multiple.derived,
+      marketValues.quoteToFinancialScale,
+      multiple.label,
+      multiple.evidence,
     );
   }
 
-  const marketCap = readNumber(statistics, "valuations_metrics.market_capitalization");
-  const enterpriseValue = readNumber(
-    statistics,
-    "valuations_metrics.enterprise_value",
-  );
   const freeCashFlow = readNumber(
     financials,
     "cash_flow.levered_free_cash_flow_ttm",
   );
-  addSeed(
+  addValidatedMultiple(
     seeds,
     "price-to-free-cash-flow",
+    undefined,
     safeDivide(marketCap, freeCashFlow),
-    "multiple",
-    "Current market capitalisation divided by trailing levered free cash flow.",
-    statisticsEvidence,
+    marketValues.quoteToFinancialScale,
+    "price-to-free-cash-flow",
+    combinedEvidence(statisticsEvidence, priceEvidence),
   );
-  addSeed(
+  addValidatedMultiple(
     seeds,
     "enterprise-value-to-free-cash-flow",
+    undefined,
     safeDivide(enterpriseValue, freeCashFlow),
-    "multiple",
-    "Current enterprise value divided by trailing levered free cash flow.",
-    statisticsEvidence,
+    marketValues.quoteToFinancialScale,
+    "enterprise-value-to-free-cash-flow",
+    combinedEvidence(statisticsEvidence, priceEvidence),
   );
   const fcfYield = safeDivide(freeCashFlow, marketCap);
-  addSeed(
+  addSanityCheckedPercentage(
     seeds,
     "free-cash-flow-yield",
     fcfYield === undefined ? undefined : fcfYield * 100,
-    "percent",
     "Trailing levered free cash flow as a percentage of current market capitalisation.",
-    statisticsEvidence,
+    combinedEvidence(statisticsEvidence, priceEvidence),
   );
 
   const cashFlows = latestAnnualRecords(cashFlowResult);
-  const balances = latestAnnualRecords(balanceResult);
   const latestCashFlow = cashFlows[0];
   const dividends = readNumber(
     latestCashFlow,
@@ -634,11 +913,10 @@ function buildValueSeeds(
       ? undefined
       : -dividends - repurchases + debtReduction;
   const shareholderYield = safeDivide(shareholderReturn, marketCap);
-  addSeed(
+  addSanityCheckedPercentage(
     seeds,
     "shareholder-yield",
     shareholderYield === undefined ? undefined : shareholderYield * 100,
-    "percent",
     "Latest annual dividends and net repurchases plus year-on-year debt reduction, divided by current market capitalisation.",
     combinedEvidence(
       statisticsEvidence,
@@ -646,6 +924,38 @@ function buildValueSeeds(
       evidenceFor(balanceResult, readString(balances[0], "fiscal_date")),
     ),
   );
+
+  if (marketCap === undefined) {
+    for (const factorId of [
+      "price-to-earnings",
+      "price-to-sales",
+      "price-to-book",
+      "price-to-free-cash-flow",
+      "free-cash-flow-yield",
+      "shareholder-yield",
+    ]) {
+      rejectSeed(
+        seeds,
+        factorId,
+        `Rejected because market capitalisation failed unit validation. ${marketValues.marketCapMessage}`,
+        statisticsEvidence,
+      );
+    }
+  }
+
+  if (enterpriseValue === undefined) {
+    for (const factorId of [
+      "enterprise-value-to-ebitda",
+      "enterprise-value-to-free-cash-flow",
+    ]) {
+      rejectSeed(
+        seeds,
+        factorId,
+        `Rejected because enterprise value failed unit validation. ${marketValues.enterpriseValueMessage}`,
+        statisticsEvidence,
+      );
+    }
+  }
 
   return seeds;
 }
@@ -845,7 +1155,7 @@ function buildPillar(
   const factors: RawFactorResult[] = definitions.map((definition) => {
     const seed = seeds.get(definition.id);
 
-    return seed
+    return seed?.status === "available"
       ? {
           factorId: definition.id,
           name: definition.name,
@@ -854,8 +1164,23 @@ function buildPillar(
           direction: definition.direction,
           status: "available",
           scoreStatus: "percentile-locked",
-          ...seed,
+          rawValue: seed.rawValue,
+          unit: seed.unit,
+          explanation: seed.explanation,
+          evidence: seed.evidence,
         }
+      : seed?.status === "rejected"
+        ? {
+            factorId: definition.id,
+            name: definition.name,
+            pillar,
+            category: definition.category,
+            direction: definition.direction,
+            status: "rejected",
+            scoreStatus: "percentile-locked",
+            explanation: seed.explanation,
+            evidence: seed.evidence,
+          }
       : {
           factorId: definition.id,
           name: definition.name,
@@ -888,6 +1213,25 @@ export function buildRawTodayScoreReport(
   generatedAt = new Date().toISOString(),
 ): RawTodayScoreReport {
   const provider = results[0];
+  const marketValues = marketValueValidationFor(results);
+  const quality = buildPillar(
+    "quality",
+    qualityFactorDefinitions,
+    buildQualitySeeds(results, marketValues),
+  );
+  const value = buildPillar(
+    "value",
+    valueFactorDefinitions,
+    buildValueSeeds(results, marketValues),
+  );
+  const momentum = buildPillar(
+    "momentum",
+    momentumFactorDefinitions,
+    buildMomentumSeeds(results),
+  );
+  const rejectedFactorCount = [quality, value, momentum]
+    .flatMap((pillar) => pillar.factors)
+    .filter((factor) => factor.status === "rejected").length;
 
   return {
     company,
@@ -898,6 +1242,15 @@ export function buildRawTodayScoreReport(
     scoreStatus: "percentile-locked",
     scoreMessage:
       "Raw factors are evidence, not scores. Factor percentiles and Q/V/M scores remain locked until a validated comparison universe is available.",
+    unitValidation: {
+      status:
+        rejectedFactorCount > 0 ? "rejected" : marketValues.status,
+      quoteCurrency: marketValues.quoteCurrency,
+      financialCurrency: marketValues.financialCurrency,
+      quoteToFinancialScale: marketValues.quoteToFinancialScale,
+      messages: marketValues.messages,
+      rejectedFactorCount,
+    },
     datasets: results.map((result) => ({
       dataset: result.dataset,
       status: result.status,
@@ -907,21 +1260,9 @@ export function buildRawTodayScoreReport(
       sampleSize: result.sampleSize,
     })),
     pillars: {
-      quality: buildPillar(
-        "quality",
-        qualityFactorDefinitions,
-        buildQualitySeeds(results),
-      ),
-      value: buildPillar(
-        "value",
-        valueFactorDefinitions,
-        buildValueSeeds(results),
-      ),
-      momentum: buildPillar(
-        "momentum",
-        momentumFactorDefinitions,
-        buildMomentumSeeds(results),
-      ),
+      quality,
+      value,
+      momentum,
     },
   };
 }

@@ -37,6 +37,7 @@ function formatRawValue(value: number, unit: RawFactorUnit | undefined): string 
 
 function FactorRow({ factor }: { factor: RawFactorResult }) {
   const available = factor.status === "available" && factor.rawValue !== undefined;
+  const rejected = factor.status === "rejected";
   const observedDates = [
     ...new Set(
       factor.evidence.flatMap((evidence) =>
@@ -62,12 +63,16 @@ function FactorRow({ factor }: { factor: RawFactorResult }) {
             className={
               available
                 ? "rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-sm font-black text-cyan-200"
+                : rejected
+                  ? "rounded-lg border border-rose-300/20 bg-rose-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-rose-200"
                 : "rounded-lg border border-slate-600/30 bg-slate-500/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
             }
           >
             {available
               ? formatRawValue(factor.rawValue!, factor.unit)
-              : "Unavailable"}
+              : rejected
+                ? "Rejected"
+                : "Unavailable"}
           </span>
           <span className="rounded-lg border border-amber-300/20 bg-amber-300/10 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-amber-200">
             Score locked
@@ -197,6 +202,39 @@ export default function TwelveDataRawFactorLab({
                   </p>
                 </div>
               ))}
+            </div>
+
+            <div
+              className={`mt-5 rounded-2xl border px-5 py-4 ${
+                report.unitValidation.status === "rejected"
+                  ? "border-rose-300/20 bg-rose-300/[0.06]"
+                  : report.unitValidation.status === "normalised"
+                    ? "border-cyan-300/20 bg-cyan-300/[0.06]"
+                    : "border-emerald-300/20 bg-emerald-300/[0.06]"
+              }`}
+            >
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-white">
+                    Currency and unit validation · {report.unitValidation.status}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Quote {report.unitValidation.quoteCurrency ?? "unknown"} · Financials{" "}
+                    {report.unitValidation.financialCurrency ?? "unknown"}
+                    {report.unitValidation.quoteToFinancialScale !== undefined
+                      ? ` · Scale ${report.unitValidation.quoteToFinancialScale}`
+                      : ""}
+                  </p>
+                </div>
+                <span className="w-fit rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-slate-200">
+                  {report.unitValidation.rejectedFactorCount} rejected factors
+                </span>
+              </div>
+              <ul className="mt-3 space-y-1 text-xs leading-5 text-slate-400">
+                {report.unitValidation.messages.map((validationMessage) => (
+                  <li key={validationMessage}>• {validationMessage}</li>
+                ))}
+              </ul>
             </div>
           </div>
 

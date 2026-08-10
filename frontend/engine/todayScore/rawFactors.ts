@@ -6,9 +6,23 @@ import type {
   TodayScoreDataset,
 } from "./providers/types";
 
-export type RawFactorStatus = "available" | "unavailable";
+export type RawFactorStatus = "available" | "rejected" | "unavailable";
 export type RawFactorScoreStatus = "percentile-locked";
 export type RawFactorUnit = "percent" | "ratio" | "multiple" | "count";
+
+export type RawUnitValidationStatus =
+  | "validated"
+  | "normalised"
+  | "rejected";
+
+export interface RawUnitValidation {
+  status: RawUnitValidationStatus;
+  quoteCurrency?: string;
+  financialCurrency?: string;
+  quoteToFinancialScale?: number;
+  messages: string[];
+  rejectedFactorCount: number;
+}
 
 export interface RawFactorEvidence {
   providerId: string;
@@ -60,6 +74,7 @@ export interface RawTodayScoreReport {
   generatedAt: string;
   scoreStatus: RawFactorScoreStatus;
   scoreMessage: string;
+  unitValidation: RawUnitValidation;
   datasets: RawFactorDatasetStatus[];
   pillars: Record<TodayScorePillar, RawFactorPillarReport>;
 }

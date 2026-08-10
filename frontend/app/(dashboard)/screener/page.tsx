@@ -1,4 +1,6 @@
 import TodayScoreScreener from "@/components/todayScore/TodayScoreScreener";
+import TodayScorePilotUniverse from "@/components/todayScore/TodayScorePilotUniverse";
+import { realCompanyUniverse } from "@/data/realCompanyUniverse";
 import { screenerCompanyMetadata } from "@/data/screenerCompanies";
 import { todayScoreTestResults } from "@/engine/todayScore/todayScoreTest";
 
@@ -29,6 +31,22 @@ export default function TodayScoreScreenerPage() {
               Development universe · research signals only
             </p>
           </div>
+        </div>
+
+        <TodayScorePilotUniverse companies={realCompanyUniverse} />
+
+        <div className="mt-10">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
+            Scoring-engine test cohort
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            Development rankings
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+            The ranked companies below remain fictional test records. They keep
+            the screener usable while the real-company data pipeline is built
+            and validated.
+          </p>
         </div>
 
         <TodayScoreScreener

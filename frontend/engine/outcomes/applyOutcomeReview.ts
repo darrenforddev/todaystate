@@ -1,4 +1,5 @@
 import type {
+  HorizonOutcome,
   SelectionOutcomeRecord,
 } from "./types";
 
@@ -6,29 +7,37 @@ import type {
   OutcomeReviewResult,
 } from "./outcomeReview";
 
+import {
+  generateOutcomeExplanation,
+} from "./outcomeExplanation";
+
 export function applyOutcomeReview(
   record: SelectionOutcomeRecord,
   review: OutcomeReviewResult,
 ): SelectionOutcomeRecord {
-  if (record.selectionId !== review.selectionId) {
+  if (
+    record.selection.selectionId !==
+    review.selectionId
+  ) {
     throw new Error(
-      `Review selection ID "${review.selectionId}" does not match record "${record.selectionId}".`,
+      `Review selection ID "${review.selectionId}" does not match record "${record.selection.selectionId}".`,
     );
   }
 
   const matchingOutcomes = record.outcomes.filter(
-    (outcome) => outcome.horizon === review.horizon,
+    (outcome) =>
+      outcome.horizon === review.horizon,
   );
 
   if (matchingOutcomes.length === 0) {
     throw new Error(
-      `No ${review.horizon} outcome exists for selection "${record.selectionId}".`,
+      `No ${review.horizon} outcome exists for selection "${record.selection.selectionId}".`,
     );
   }
 
   if (matchingOutcomes.length > 1) {
     throw new Error(
-      `Selection "${record.selectionId}" contains duplicate ${review.horizon} outcomes.`,
+      `Selection "${record.selection.selectionId}" contains duplicate ${review.horizon} outcomes.`,
     );
   }
 
@@ -49,6 +58,32 @@ export function applyOutcomeReview(
     );
   }
 
+  const completedOutcome: HorizonOutcome = {
+    ...matchingOutcome,
+
+    reviewedAt: review.reviewedAt,
+
+    companyReviewPrice:
+      review.companyReviewPrice,
+
+    benchmarkReviewPrice:
+      review.benchmarkReviewPrice,
+
+    companyReturn: review.companyReturn,
+    benchmarkReturn: review.benchmarkReturn,
+    relativeReturn: review.relativeReturn,
+
+    status: review.status,
+    explanation: review.explanation,
+  };
+
+  const outcomeExplanation =
+    generateOutcomeExplanation({
+      selection: record.selection,
+      outcome: completedOutcome,
+      generatedAt: review.reviewedAt,
+    });
+
   return {
     ...record,
 
@@ -58,22 +93,8 @@ export function applyOutcomeReview(
       }
 
       return {
-        ...outcome,
-
-        reviewedAt: review.reviewedAt,
-
-        companyReviewPrice:
-          review.companyReviewPrice,
-
-        benchmarkReviewPrice:
-          review.benchmarkReviewPrice,
-
-        companyReturn: review.companyReturn,
-        benchmarkReturn: review.benchmarkReturn,
-        relativeReturn: review.relativeReturn,
-
-        status: review.status,
-        explanation: review.explanation,
+        ...completedOutcome,
+        outcomeExplanation,
       };
     }),
   };

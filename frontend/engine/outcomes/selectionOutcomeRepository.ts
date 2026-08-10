@@ -115,9 +115,10 @@ function mapHorizonOutcome(
     horizon: row.horizon,
     measurementDate: row.measurement_date,
 
-    companyPrice: row.company_price ?? undefined,
-    benchmarkPrice:
-      row.benchmark_price ?? undefined,
+   companyReviewPrice:
+  row.company_price ?? undefined,
+benchmarkReviewPrice:
+  row.benchmark_price ?? undefined,
 
     companyReturn:
       row.company_return ?? undefined,
@@ -356,8 +357,8 @@ export async function saveHorizonOutcome(
       ${selectionId},
       ${outcome.horizon},
       ${outcome.measurementDate},
-      ${outcome.companyPrice ?? null},
-      ${outcome.benchmarkPrice ?? null},
+      ${outcome.companyReviewPrice ?? null},
+      ${outcome.benchmarkReviewPrice ?? null},
       ${outcome.companyReturn ?? null},
       ${outcome.benchmarkReturn ?? null},
       ${outcome.relativeReturn ?? null},

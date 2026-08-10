@@ -14,68 +14,70 @@ import {
 const selectionId =
   "atlas-long-2026-08-09-test";
 
-const baseRecord = {
-  selectionId,
+const baseRecord: SelectionOutcomeRecord = {
+  selection: {
+    selectionId,
 
-  companyId: "atlas",
-  ticker: "ATL",
-  companyName: "Atlas Industries",
+    companyId: "atlas",
+    ticker: "ATL",
+    companyName: "Atlas Industries",
 
-  decision: "long",
-  selectedAt: "2026-08-09",
-  entryPrice: 100,
+    decision: "long",
+    selectedAt: "2026-08-09",
+    entryPrice: 100,
 
-  todayScore: 80,
-  qualityScore: 83,
-  valueScore: 83,
-  momentumScore: 73,
+    todayScore: 80,
+    qualityScore: 83,
+    valueScore: 83,
+    momentumScore: 73,
 
-  themeId: "manufacturing-recovery",
-  themeName: "Manufacturing Recovery",
-  themeScore: 82,
-  themeConfidence: 84,
+    themeId: "manufacturing-recovery",
+    themeName: "Manufacturing Recovery",
+    themeScore: 82,
+    themeConfidence: 84,
 
-  benchmarkId: "sp500",
-  benchmarkName: "S&P 500",
-  benchmarkEntryPrice: 100,
+    benchmarkId: "sp500",
+    benchmarkName: "S&P 500",
+    benchmarkEntryPrice: 100,
 
-  thesis:
-    "Atlas qualifies because its scores support a long selection.",
+    thesis:
+      "Atlas qualifies because its scores support a long selection.",
 
-  risks: [
-    "Economic recovery weakens",
-    "Company earnings deteriorate",
-  ],
+    risks: [
+      "Economic recovery weakens",
+      "Company earnings deteriorate",
+    ],
+  },
 
   outcomes: [
     {
-      horizon: "1-month",
+      horizon: "one-month",
       measurementDate: "2026-09-09",
       status: "pending",
     },
     {
-      horizon: "3-month",
+      horizon: "three-month",
       measurementDate: "2026-11-09",
       status: "pending",
     },
     {
-      horizon: "6-month",
+      horizon: "six-month",
       measurementDate: "2027-02-09",
       status: "pending",
     },
     {
-      horizon: "12-month",
+      horizon: "twelve-month",
       measurementDate: "2027-08-09",
       status: "pending",
     },
   ],
-} as SelectionOutcomeRecord;
+};
 
 const successfulReview =
   calculateOutcomeReview({
     selectionId,
     decision: "long",
-    horizon: "1-month",
+    horizon: "one-month",
 
     measurementDate: "2026-09-09",
     reviewedAt: "2026-09-09",
@@ -146,12 +148,12 @@ export function runApplyOutcomeReviewTests(): void {
   const reviewedOutcome =
     updatedRecord.outcomes.find(
       (outcome) =>
-        outcome.horizon === "1-month",
+        outcome.horizon === "one-month",
     );
 
   if (!reviewedOutcome) {
     throw new Error(
-      "Updated 1-month outcome was not found.",
+      "Updated one-month outcome was not found.",
     );
   }
 
@@ -191,10 +193,42 @@ export function runApplyOutcomeReviewTests(): void {
     "Reviewed relative return",
   );
 
+  if (!reviewedOutcome.outcomeExplanation) {
+    throw new Error(
+      "Structured outcome explanation was not generated.",
+    );
+  }
+
+  assertEqual(
+    reviewedOutcome.outcomeExplanation
+      .predictionWasCorrect,
+    true,
+    "Prediction correctness",
+  );
+
+  assertEqual(
+    reviewedOutcome.outcomeExplanation.primaryCause,
+    "insufficient-evidence",
+    "Initial explanation cause",
+  );
+
+  assertEqual(
+    reviewedOutcome.outcomeExplanation
+      .confidenceAdjustment,
+    3,
+    "Confidence adjustment",
+  );
+
+  assertEqual(
+    reviewedOutcome.outcomeExplanation.generatedAt,
+    "2026-09-09",
+    "Explanation generation date",
+  );
+
   const remainingPendingOutcomes =
     updatedRecord.outcomes.filter(
       (outcome) =>
-        outcome.horizon !== "1-month" &&
+        outcome.horizon !== "one-month" &&
         outcome.status === "pending",
     );
 
@@ -235,14 +269,15 @@ export function runApplyOutcomeReviewTests(): void {
     "does not match scheduled date",
   );
 
-  const recordWithoutOneMonth = {
-    ...baseRecord,
+  const recordWithoutOneMonth:
+    SelectionOutcomeRecord = {
+      ...baseRecord,
 
-    outcomes: baseRecord.outcomes.filter(
-      (outcome) =>
-        outcome.horizon !== "1-month",
-    ),
-  };
+      outcomes: baseRecord.outcomes.filter(
+        (outcome) =>
+          outcome.horizon !== "one-month",
+      ),
+    };
 
   assertThrows(
     () => {
@@ -251,19 +286,20 @@ export function runApplyOutcomeReviewTests(): void {
         successfulReview,
       );
     },
-    "No 1-month outcome exists",
+    "No one-month outcome exists",
   );
 
-  const duplicateOutcomeRecord = {
-    ...baseRecord,
+  const duplicateOutcomeRecord:
+    SelectionOutcomeRecord = {
+      ...baseRecord,
 
-    outcomes: [
-      ...baseRecord.outcomes,
-      {
-        ...baseRecord.outcomes[0],
-      },
-    ],
-  };
+      outcomes: [
+        ...baseRecord.outcomes,
+        {
+          ...baseRecord.outcomes[0],
+        },
+      ],
+    };
 
   assertThrows(
     () => {
@@ -272,7 +308,7 @@ export function runApplyOutcomeReviewTests(): void {
         successfulReview,
       );
     },
-    "contains duplicate 1-month outcomes",
+    "contains duplicate one-month outcomes",
   );
 
   assertThrows(

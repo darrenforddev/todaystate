@@ -44,32 +44,32 @@ const oneMonthOutcome = measureOutcome({
   selection: cinderSelection,
   horizon: "one-month",
   measurementDate: "2026-09-01",
-  companyPrice: 97,
-  benchmarkPrice: 5050,
+  companyReviewPrice: 97,
+  benchmarkReviewPrice: 5050,
 });
 
 const threeMonthOutcome = measureOutcome({
   selection: cinderSelection,
   horizon: "three-month",
   measurementDate: "2026-11-01",
-  companyPrice: 90,
-  benchmarkPrice: 5100,
+  companyReviewPrice:90,
+  benchmarkReviewPrice: 5100,
 });
 
 const sixMonthOutcome = measureOutcome({
   selection: cinderSelection,
   horizon: "six-month",
   measurementDate: "2027-02-01",
-  companyPrice: 81,
-  benchmarkPrice: 5200,
+  companyReviewPrice: 81,
+  benchmarkReviewPrice: 5200,
 });
 
 const twelveMonthOutcome = measureOutcome({
   selection: cinderSelection,
   horizon: "twelve-month",
   measurementDate: "2027-08-01",
-  companyPrice: 70,
-  benchmarkPrice: 5300,
+  companyReviewPrice: 70,
+  benchmarkReviewPrice: 5300,
 });
 
 const review = buildOutcomeReview({

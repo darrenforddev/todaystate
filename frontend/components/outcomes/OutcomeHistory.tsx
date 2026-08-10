@@ -78,7 +78,11 @@ export default function OutcomeHistory({ records }: OutcomeHistoryProps) {
     const themeMap = new Map<string, string>();
 
     records.forEach((record) => {
-      themeMap.set(record.selection.themeId, record.selection.themeName);
+      const { themeId, themeName } = record.selection;
+
+      if (themeId !== undefined && themeName !== undefined) {
+        themeMap.set(themeId, themeName);
+      }
     });
 
     return Array.from(themeMap.entries()).map(([id, name]) => ({
@@ -392,7 +396,11 @@ export default function OutcomeHistory({ records }: OutcomeHistoryProps) {
 
                 <Metric
                   label="Confidence"
-                  value={`${record.selection.themeConfidence}%`}
+                  value={
+                    record.selection.themeConfidence === undefined
+                      ? "Not scored"
+                      : `${record.selection.themeConfidence}%`
+                  }
                   colourClass="text-cyan-300"
                 />
 

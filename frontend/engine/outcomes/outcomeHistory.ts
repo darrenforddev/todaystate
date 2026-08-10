@@ -1,4 +1,5 @@
 import type {
+  HorizonOutcome,
   OutcomeHorizon,
   OutcomeStatus,
   SelectionOutcomeRecord,
@@ -29,7 +30,7 @@ export interface OutcomeHistorySummary {
 function getOutcomeForHorizon(
   record: SelectionOutcomeRecord,
   horizon: OutcomeHorizon,
-) {
+): HorizonOutcome | undefined {
   return record.outcomes.find(
     (outcome) => outcome.horizon === horizon,
   );
@@ -39,72 +40,87 @@ export function filterOutcomeHistory(
   records: SelectionOutcomeRecord[],
   filters: OutcomeHistoryFilters = {},
 ): SelectionOutcomeRecord[] {
+  const {
+    status,
+    decision,
+    horizon,
+    minimumTodayScore,
+    maximumTodayScore,
+    minimumThemeConfidence,
+    maximumThemeConfidence,
+    themeId,
+  } = filters;
+
   return records.filter((record) => {
     const { selection } = record;
 
     if (
-      filters.decision !== undefined &&
-      selection.decision !== filters.decision
+      decision !== undefined &&
+      selection.decision !== decision
     ) {
       return false;
     }
 
     if (
-      filters.minimumTodayScore !== undefined &&
-      selection.todayScore < filters.minimumTodayScore
+      minimumTodayScore !== undefined &&
+      selection.todayScore < minimumTodayScore
     ) {
       return false;
     }
 
     if (
-      filters.maximumTodayScore !== undefined &&
-      selection.todayScore > filters.maximumTodayScore
+      maximumTodayScore !== undefined &&
+      selection.todayScore > maximumTodayScore
     ) {
       return false;
+    }
+
+    if (minimumThemeConfidence !== undefined) {
+      if (
+        selection.themeConfidence === undefined ||
+        selection.themeConfidence <
+          minimumThemeConfidence
+      ) {
+        return false;
+      }
+    }
+
+    if (maximumThemeConfidence !== undefined) {
+      if (
+        selection.themeConfidence === undefined ||
+        selection.themeConfidence >
+          maximumThemeConfidence
+      ) {
+        return false;
+      }
     }
 
     if (
-      filters.minimumThemeConfidence !== undefined &&
-      selection.themeConfidence <
-        filters.minimumThemeConfidence
+      themeId !== undefined &&
+      selection.themeId !== themeId
     ) {
       return false;
     }
 
-    if (
-      filters.maximumThemeConfidence !== undefined &&
-      selection.themeConfidence >
-        filters.maximumThemeConfidence
-    ) {
-      return false;
-    }
-
-    if (
-      filters.themeId !== undefined &&
-      selection.themeId !== filters.themeId
-    ) {
-      return false;
-    }
-
-    if (filters.horizon !== undefined) {
+    if (horizon !== undefined) {
       const outcome = getOutcomeForHorizon(
         record,
-        filters.horizon,
+        horizon,
       );
 
-      if (!outcome) {
+      if (outcome === undefined) {
         return false;
       }
 
       if (
-        filters.status !== undefined &&
-        outcome.status !== filters.status
+        status !== undefined &&
+        outcome.status !== status
       ) {
         return false;
       }
-    } else if (filters.status !== undefined) {
+    } else if (status !== undefined) {
       const matchesStatus = record.outcomes.some(
-        (outcome) => outcome.status === filters.status,
+        (outcome) => outcome.status === status,
       );
 
       if (!matchesStatus) {
@@ -129,9 +145,12 @@ export function getOutcomeHistorySummary(
   };
 
   records.forEach((record) => {
-    const outcome = getOutcomeForHorizon(record, horizon);
+    const outcome = getOutcomeForHorizon(
+      record,
+      horizon,
+    );
 
-    if (!outcome) {
+    if (outcome === undefined) {
       summary.pending += 1;
       return;
     }

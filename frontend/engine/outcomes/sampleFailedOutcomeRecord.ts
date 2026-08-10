@@ -44,32 +44,32 @@ const oneMonthOutcome = measureOutcome({
   selection: borealisSelection,
   horizon: "one-month",
   measurementDate: "2026-09-01",
-  companyPrice: 102,
-  benchmarkPrice: 5100,
+  companyReviewPrice: 102,
+  benchmarkReviewPrice: 5100,
 });
 
 const threeMonthOutcome = measureOutcome({
   selection: borealisSelection,
   horizon: "three-month",
   measurementDate: "2026-11-01",
-  companyPrice: 100,
-  benchmarkPrice: 5250,
+  companyReviewPrice: 100,
+  benchmarkReviewPrice: 5250,
 });
 
 const sixMonthOutcome = measureOutcome({
   selection: borealisSelection,
   horizon: "six-month",
   measurementDate: "2027-02-01",
-  companyPrice: 92,
-  benchmarkPrice: 5400,
+  companyReviewPrice: 92,
+  benchmarkReviewPrice: 5400,
 });
 
 const twelveMonthOutcome = measureOutcome({
   selection: borealisSelection,
   horizon: "twelve-month",
   measurementDate: "2027-08-01",
-  companyPrice: 85,
-  benchmarkPrice: 5600,
+  companyReviewPrice: 85,
+  benchmarkReviewPrice:5600,
 });
 
 const review = buildOutcomeReview({

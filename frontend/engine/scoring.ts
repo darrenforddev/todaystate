@@ -8,8 +8,27 @@ interface ScoringSignal {
   independenceGroup: string;
 }
 
+export interface ConvictionGroup {
+  independenceGroup: string;
+  strength: number;
+  direction: -1 | 0 | 1;
+}
+
+export interface RelationshipScoreBreakdown {
+  score: number;
+  groups: ConvictionGroup[];
+  supportiveStrength: number;
+  contradictoryStrength: number;
+  signedTotal: number;
+  totalStrength: number;
+  directionalBalance: number;
+}
+
 function clampScore(score: number): number {
-  return Math.max(0, Math.min(100, Math.round(score)));
+  return Math.max(
+    0,
+    Math.min(100, Math.round(score)),
+  );
 }
 
 function getScoringSignals(
@@ -55,8 +74,9 @@ function collapseIndependenceGroups(
 
   for (const signal of signals) {
     const existing =
-      groupedSignals.get(signal.independenceGroup) ??
-      [];
+      groupedSignals.get(
+        signal.independenceGroup,
+      ) ?? [];
 
     existing.push(signal);
 
@@ -66,34 +86,36 @@ function collapseIndependenceGroups(
     );
   }
 
-  return Array.from(groupedSignals.entries()).map(
-    ([independenceGroup, group]) => {
-      const signedStrength = group.reduce(
-        (total, signal) =>
-          total +
-          signal.strength * signal.direction,
-        0,
-      );
+  return Array.from(
+    groupedSignals.entries(),
+  ).map(([independenceGroup, group]) => {
+    const signedStrength = group.reduce(
+      (total, signal) =>
+        total +
+        signal.strength * signal.direction,
+      0,
+    );
 
-      const strongestStrength = Math.max(
-        ...group.map((signal) => signal.strength),
-      );
+    const strongestStrength = Math.max(
+      ...group.map(
+        (signal) => signal.strength,
+      ),
+    );
 
-      let direction: -1 | 0 | 1 = 0;
+    let direction: -1 | 0 | 1 = 0;
 
-      if (signedStrength > 0) {
-        direction = 1;
-      } else if (signedStrength < 0) {
-        direction = -1;
-      }
+    if (signedStrength > 0) {
+      direction = 1;
+    } else if (signedStrength < 0) {
+      direction = -1;
+    }
 
-      return {
-        strength: strongestStrength,
-        direction,
-        independenceGroup,
-      };
-    },
-  );
+    return {
+      strength: strongestStrength,
+      direction,
+      independenceGroup,
+    };
+  });
 }
 
 function calculateAgreeingScore(
@@ -114,22 +136,9 @@ function calculateAgreeingScore(
   return score;
 }
 
-export function calculateRelationshipScore(
-  targetType: ScoringTarget,
-  targetId: string,
+function calculateScoreFromSignals(
+  signals: ScoringSignal[],
 ): number {
-  const rawSignals = getScoringSignals(
-    targetType,
-    targetId,
-  ).filter((signal) => signal.direction !== 0);
-
-  if (rawSignals.length === 0) {
-    return 50;
-  }
-
-  const signals =
-    collapseIndependenceGroups(rawSignals);
-
   const positiveSignals = signals.filter(
     (signal) => signal.direction === 1,
   );
@@ -148,12 +157,15 @@ export function calculateRelationshipScore(
     const negativeStrength =
       calculateAgreeingScore(negativeSignals);
 
-    return clampScore(100 - negativeStrength);
+    return clampScore(
+      100 - negativeStrength,
+    );
   }
 
   const signedTotal = signals.reduce(
     (total, signal) =>
-      total + signal.strength * signal.direction,
+      total +
+      signal.strength * signal.direction,
     0,
   );
 
@@ -169,6 +181,86 @@ export function calculateRelationshipScore(
   return clampScore(
     50 + directionalBalance * 50,
   );
+}
+
+export function getRelationshipScoreBreakdown(
+  targetType: ScoringTarget,
+  targetId: string,
+): RelationshipScoreBreakdown {
+  const rawSignals = getScoringSignals(
+    targetType,
+    targetId,
+  ).filter(
+    (signal) => signal.direction !== 0,
+  );
+
+  if (rawSignals.length === 0) {
+    return {
+      score: 50,
+      groups: [],
+      supportiveStrength: 0,
+      contradictoryStrength: 0,
+      signedTotal: 0,
+      totalStrength: 0,
+      directionalBalance: 0,
+    };
+  }
+
+  const signals =
+    collapseIndependenceGroups(rawSignals);
+
+  const supportiveStrength = signals
+    .filter(
+      (signal) => signal.direction === 1,
+    )
+    .reduce(
+      (total, signal) =>
+        total + signal.strength,
+      0,
+    );
+
+  const contradictoryStrength = signals
+    .filter(
+      (signal) => signal.direction === -1,
+    )
+    .reduce(
+      (total, signal) =>
+        total + signal.strength,
+      0,
+    );
+
+  const signedTotal =
+    supportiveStrength -
+    contradictoryStrength;
+
+  const totalStrength =
+    supportiveStrength +
+    contradictoryStrength;
+
+  const directionalBalance =
+    totalStrength > 0
+      ? signedTotal / totalStrength
+      : 0;
+
+  return {
+    score: calculateScoreFromSignals(signals),
+    groups: signals,
+    supportiveStrength,
+    contradictoryStrength,
+    signedTotal,
+    totalStrength,
+    directionalBalance,
+  };
+}
+
+export function calculateRelationshipScore(
+  targetType: ScoringTarget,
+  targetId: string,
+): number {
+  return getRelationshipScoreBreakdown(
+    targetType,
+    targetId,
+  ).score;
 }
 
 export function calculateThemeScore(

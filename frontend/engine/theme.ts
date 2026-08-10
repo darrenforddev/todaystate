@@ -2,7 +2,11 @@ import { themes } from "@/data/themes";
 import { evidence as allEvidence } from "@/data/evidence";
 import { evidenceMetadata } from "@/data/evidenceMetadata";
 
-import { calculateThemeScore } from "./scoring";
+import {
+  getRelationshipScoreBreakdown,
+  type RelationshipScoreBreakdown,
+} from "./scoring";
+
 import { getThemeEvidence } from "./query";
 import { getThemeReasoning } from "./reasoning";
 
@@ -14,7 +18,9 @@ import {
 import {
   calculateConfidence,
   convertToConfidenceEvidence,
+  type ConfidenceBreakdown,
   type ConfidenceEvidence,
+  type ConfidenceLevel,
 } from "./confidence";
 
 import { buildConfidenceFactors } from "./confidence/confidenceFactorBuilder";
@@ -26,11 +32,25 @@ export interface ThemeEvidence {
   direction: RelationshipDirection;
 }
 
+export interface ThemeConfidence {
+  score: number;
+  level: ConfidenceLevel;
+  explanation: string;
+  breakdown: ConfidenceBreakdown;
+}
+
+export interface ThemeConviction {
+  score: number;
+  breakdown: RelationshipScoreBreakdown;
+}
+
 export interface ThemeIntelligence {
   id: string;
   name: string;
   conviction: number;
+  convictionDetails: ThemeConviction;
   confidence: number;
+  confidenceDetails: ThemeConfidence;
   signal: string;
   narrative: string;
   evidence: ThemeEvidence[];
@@ -46,29 +66,26 @@ function getThemeConfidenceEvidence(
       relationship.targetId === themeId,
   );
 
-  return themeRelationships.flatMap(
-    (relationship) => {
-      const evidenceItem = allEvidence.find(
-        (item) =>
-          item.indicatorId ===
-          relationship.evidenceId,
-      );
+  return themeRelationships.flatMap((relationship) => {
+    const evidenceItem = allEvidence.find(
+      (item) =>
+        item.indicatorId === relationship.evidenceId,
+    );
 
-      const metadata =
-        evidenceMetadata[relationship.evidenceId];
+    const metadata =
+      evidenceMetadata[relationship.evidenceId];
 
-      if (!evidenceItem || !metadata) {
-        return [];
-      }
+    if (!evidenceItem || !metadata) {
+      return [];
+    }
 
-      return [
-        convertToConfidenceEvidence(
-          evidenceItem,
-          metadata,
-        ),
-      ];
-    },
-  );
+    return [
+      convertToConfidenceEvidence(
+        evidenceItem,
+        metadata,
+      ),
+    ];
+  });
 }
 
 function getThemeSignal(
@@ -114,8 +131,14 @@ export function getTheme(
     );
   }
 
+  const convictionResult =
+    getRelationshipScoreBreakdown(
+      "theme",
+      themeId,
+    );
+
   const conviction =
-    calculateThemeScore(themeId);
+    convictionResult.score;
 
   const themeEvidence =
     getThemeEvidence(themeId);
@@ -123,9 +146,9 @@ export function getTheme(
   const confidenceEvidence =
     getThemeConfidenceEvidence(themeId);
 
-  const confidence = calculateConfidence(
+  const confidenceResult = calculateConfidence(
     buildConfidenceFactors(confidenceEvidence),
-  ).confidence;
+  );
 
   const reasoning =
     getThemeReasoning(themeId);
@@ -133,8 +156,21 @@ export function getTheme(
   return {
     id: themeId,
     name: themeDefinition.name,
+
     conviction,
-    confidence,
+    convictionDetails: {
+      score: conviction,
+      breakdown: convictionResult,
+    },
+
+    confidence: confidenceResult.confidence,
+    confidenceDetails: {
+      score: confidenceResult.confidence,
+      level: confidenceResult.level,
+      explanation: confidenceResult.explanation,
+      breakdown: confidenceResult.breakdown,
+    },
+
     signal: getThemeSignal(conviction),
     narrative: themeDefinition.opinion,
     evidence: themeEvidence,

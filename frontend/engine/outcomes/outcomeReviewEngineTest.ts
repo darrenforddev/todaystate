@@ -40,8 +40,10 @@ const successfulOutcome = measureOutcome({
   selection: baseSelection,
   horizon: "three-month",
   measurementDate: "2026-11-01",
-  companyPrice: 115,
-  benchmarkPrice: 5250,
+  reviewedAt: "2026-11-02",
+
+  companyReviewPrice: 115,
+  benchmarkReviewPrice: 5250,
 });
 
 const successfulReview = buildOutcomeReview({
@@ -63,8 +65,10 @@ const unsuccessfulOutcome = measureOutcome({
   selection: baseSelection,
   horizon: "six-month",
   measurementDate: "2027-02-01",
-  companyPrice: 90,
-  benchmarkPrice: 5500,
+  reviewedAt: "2027-02-02",
+
+  companyReviewPrice: 90,
+  benchmarkReviewPrice: 5500,
 });
 
 const unsuccessfulReview = buildOutcomeReview({
@@ -144,5 +148,7 @@ export const outcomeReviewEngineTestResults:
   };
 
 if (!outcomeReviewEngineTestResults.allPassed) {
-  throw new Error("Outcome review engine tests failed.");
+  throw new Error(
+    "Outcome review engine tests failed.",
+  );
 }

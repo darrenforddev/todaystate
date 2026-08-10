@@ -16,6 +16,43 @@ export type OutcomeStatus =
   | "unsuccessful"
   | "inconclusive";
 
+export type OutcomeExplanationCause =
+  | "theme"
+  | "today-score"
+  | "company"
+  | "macro"
+  | "timing"
+  | "market"
+  | "unexpected-event"
+  | "insufficient-evidence";
+
+export type OutcomeExplanationImpact =
+  | "supportive"
+  | "contradictory"
+  | "neutral";
+
+export interface OutcomeExplanationFactor {
+  cause: OutcomeExplanationCause;
+  impact: OutcomeExplanationImpact;
+  title: string;
+  explanation: string;
+}
+
+export interface OutcomeExplanation {
+  summary: string;
+  predictionWasCorrect: boolean;
+  primaryCause: OutcomeExplanationCause;
+
+  supportingFactors: OutcomeExplanationFactor[];
+  contradictoryFactors: OutcomeExplanationFactor[];
+
+  unexpectedEvents: string[];
+  lessons: string[];
+
+  confidenceAdjustment: number;
+  generatedAt: string;
+}
+
 export interface SelectionSnapshot {
   selectionId: string;
   companyId: string;
@@ -48,14 +85,19 @@ export interface HorizonOutcome {
   horizon: OutcomeHorizon;
   measurementDate: string;
 
-  companyPrice?: number;
-  benchmarkPrice?: number;
+  reviewedAt?: string;
+
+  companyReviewPrice?: number;
+  benchmarkReviewPrice?: number;
 
   companyReturn?: number;
   benchmarkReturn?: number;
   relativeReturn?: number;
 
   status: OutcomeStatus;
+
+  explanation?: string;
+  outcomeExplanation?: OutcomeExplanation;
 }
 
 export interface OutcomeReview {

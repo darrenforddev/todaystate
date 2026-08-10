@@ -8,6 +8,7 @@ import {
 interface OutcomeReviewTestCase {
   name: string;
   input: OutcomeReviewInput;
+
   expected: Pick<
     OutcomeReviewResult,
     | "companyReturn"
@@ -20,93 +21,110 @@ interface OutcomeReviewTestCase {
 const baseInput: OutcomeReviewInput = {
   selectionId: "atlas-long-2026-08-09-test",
   decision: "long",
-  horizon: "1-month",
+  horizon: "one-month",
+
   measurementDate: "2026-09-09",
   reviewedAt: "2026-09-09",
+
   companyEntryPrice: 100,
   companyReviewPrice: 100,
+
   benchmarkEntryPrice: 100,
   benchmarkReviewPrice: 100,
 };
 
-export const outcomeReviewTestCases: OutcomeReviewTestCase[] = [
-  {
-    name: "Successful long selection",
-    input: {
-      ...baseInput,
-      decision: "long",
-      companyReviewPrice: 110,
-      benchmarkReviewPrice: 105,
+export const outcomeReviewTestCases:
+  OutcomeReviewTestCase[] = [
+    {
+      name: "Successful long selection",
+
+      input: {
+        ...baseInput,
+        decision: "long",
+        companyReviewPrice: 110,
+        benchmarkReviewPrice: 105,
+      },
+
+      expected: {
+        companyReturn: 10,
+        benchmarkReturn: 5,
+        relativeReturn: 5,
+        status: "successful",
+      },
     },
-    expected: {
-      companyReturn: 10,
-      benchmarkReturn: 5,
-      relativeReturn: 5,
-      status: "successful",
+    {
+      name: "Unsuccessful long selection",
+
+      input: {
+        ...baseInput,
+        decision: "long",
+        companyReviewPrice: 102,
+        benchmarkReviewPrice: 105,
+      },
+
+      expected: {
+        companyReturn: 2,
+        benchmarkReturn: 5,
+        relativeReturn: -3,
+        status: "unsuccessful",
+      },
     },
-  },
-  {
-    name: "Unsuccessful long selection",
-    input: {
-      ...baseInput,
-      decision: "long",
-      companyReviewPrice: 102,
-      benchmarkReviewPrice: 105,
+    {
+      name: "Successful short selection",
+
+      input: {
+        ...baseInput,
+        selectionId:
+          "beacon-short-2026-08-09-test",
+        decision: "short",
+        companyReviewPrice: 95,
+        benchmarkReviewPrice: 102,
+      },
+
+      expected: {
+        companyReturn: -5,
+        benchmarkReturn: 2,
+        relativeReturn: 7,
+        status: "successful",
+      },
     },
-    expected: {
-      companyReturn: 2,
-      benchmarkReturn: 5,
-      relativeReturn: -3,
-      status: "unsuccessful",
+    {
+      name: "Unsuccessful short selection",
+
+      input: {
+        ...baseInput,
+        selectionId:
+          "beacon-short-2026-08-09-test",
+        decision: "short",
+        companyReviewPrice: 108,
+        benchmarkReviewPrice: 102,
+      },
+
+      expected: {
+        companyReturn: 8,
+        benchmarkReturn: 2,
+        relativeReturn: -6,
+        status: "unsuccessful",
+      },
     },
-  },
-  {
-    name: "Successful short selection",
-    input: {
-      ...baseInput,
-      selectionId: "beacon-short-2026-08-09-test",
-      decision: "short",
-      companyReviewPrice: 95,
-      benchmarkReviewPrice: 102,
+    {
+      name:
+        "Equal performance has no relative advantage",
+
+      input: {
+        ...baseInput,
+        companyReviewPrice: 105,
+        benchmarkReviewPrice: 105,
+      },
+
+      expected: {
+        companyReturn: 5,
+        benchmarkReturn: 5,
+        relativeReturn: 0,
+        status: "unsuccessful",
+      },
     },
-    expected: {
-      companyReturn: -5,
-      benchmarkReturn: 2,
-      relativeReturn: 7,
-      status: "successful",
-    },
-  },
-  {
-    name: "Unsuccessful short selection",
-    input: {
-      ...baseInput,
-      selectionId: "beacon-short-2026-08-09-test",
-      decision: "short",
-      companyReviewPrice: 108,
-      benchmarkReviewPrice: 102,
-    },
-    expected: {
-      companyReturn: 8,
-      benchmarkReturn: 2,
-      relativeReturn: -6,
-      status: "unsuccessful",
-    },
-  },
-  {
-    name: "Equal performance has no relative advantage",
-    input: {
-      ...baseInput,
-      companyReviewPrice: 105,
-      benchmarkReviewPrice: 105,
-    },
-    expected: {
-      companyReturn: 5,
-      benchmarkReturn: 5,
-      relativeReturn: 0,
-      status: "unsuccessful",
-    },
-  },
-];
+  ];
 
 function assertEqual<T>(
   actual: T,
@@ -130,7 +148,9 @@ function assertThrows(
     action();
   } catch (error) {
     const actualMessage =
-      error instanceof Error ? error.message : String(error);
+      error instanceof Error
+        ? error.message
+        : String(error);
 
     if (!actualMessage.includes(expectedMessage)) {
       throw new Error(
@@ -217,7 +237,10 @@ export function runOutcomeReviewTests(): void {
 
   assertThrows(
     () => {
-      isOutcomeDue("2026-02-30", "2026-09-09");
+      isOutcomeDue(
+        "2026-02-30",
+        "2026-09-09",
+      );
     },
     "Measurement date is invalid",
   );
@@ -226,7 +249,9 @@ export function runOutcomeReviewTests(): void {
 export const outcomeReviewTestResults =
   outcomeReviewTestCases.map((testCase) => ({
     name: testCase.name,
-    result: calculateOutcomeReview(testCase.input),
+    result: calculateOutcomeReview(
+      testCase.input,
+    ),
   }));
 
 runOutcomeReviewTests();

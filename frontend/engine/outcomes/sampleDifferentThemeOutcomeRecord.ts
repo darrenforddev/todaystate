@@ -45,32 +45,32 @@ const oneMonthOutcome = measureOutcome({
   selection: harbourSelection,
   horizon: "one-month",
   measurementDate: "2026-09-01",
-  companyPrice: 101,
-  benchmarkPrice: 5050,
+  companyReviewPrice: 101,
+  benchmarkReviewPrice: 5050,
 });
 
 const threeMonthOutcome = measureOutcome({
   selection: harbourSelection,
   horizon: "three-month",
   measurementDate: "2026-11-01",
-  companyPrice: 106,
-  benchmarkPrice: 5100,
+  companyReviewPrice: 106,
+  benchmarkReviewPrice: 5100,
 });
 
 const sixMonthOutcome = measureOutcome({
   selection: harbourSelection,
   horizon: "six-month",
   measurementDate: "2027-02-01",
-  companyPrice: 111,
-  benchmarkPrice: 5200,
+  companyReviewPrice: 111,
+  benchmarkReviewPrice: 5200,
 });
 
 const twelveMonthOutcome = measureOutcome({
   selection: harbourSelection,
   horizon: "twelve-month",
   measurementDate: "2027-08-01",
-  companyPrice: 120,
-  benchmarkPrice: 5300,
+  companyReviewPrice: 120,
+  benchmarkReviewPrice: 5300,
 });
 
 const review = buildOutcomeReview({

@@ -43,32 +43,32 @@ const oneMonthOutcome = measureOutcome({
   selection: atlasSelection,
   horizon: "one-month",
   measurementDate: "2026-09-01",
-  companyPrice: 106,
-  benchmarkPrice: 5100,
+  companyReviewPrice: 106,
+  benchmarkReviewPrice: 5100,
 });
 
 const threeMonthOutcome = measureOutcome({
   selection: atlasSelection,
   horizon: "three-month",
   measurementDate: "2026-11-01",
-  companyPrice: 115,
-  benchmarkPrice: 5250,
+  companyReviewPrice: 115,
+  benchmarkReviewPrice: 5250,
 });
 
 const sixMonthOutcome = measureOutcome({
   selection: atlasSelection,
   horizon: "six-month",
   measurementDate: "2027-02-01",
-  companyPrice: 121,
-  benchmarkPrice: 5400,
+  companyReviewPrice: 121,
+  benchmarkReviewPrice: 5400,
 });
 
 const twelveMonthOutcome = measureOutcome({
   selection: atlasSelection,
   horizon: "twelve-month",
   measurementDate: "2027-08-01",
-  companyPrice: 130,
-  benchmarkPrice: 5600,
+  companyReviewPrice: 130,
+  benchmarkReviewPrice: 5600,
 });
 
 const review = buildOutcomeReview({

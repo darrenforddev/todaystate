@@ -33,6 +33,7 @@ const baseSelection: SelectionSnapshot = {
 
   thesis:
     "Strong TodayScore supported by an improving manufacturing theme.",
+
   risks: [
     "Manufacturing recovery may weaken.",
     "Company earnings may disappoint.",
@@ -42,9 +43,12 @@ const baseSelection: SelectionSnapshot = {
 const successfulLong = measureOutcome({
   selection: baseSelection,
   horizon: "one-month",
+
   measurementDate: "2026-09-01",
-  companyPrice: 110,
-  benchmarkPrice: 5250,
+  reviewedAt: "2026-09-01",
+
+  companyReviewPrice: 110,
+  benchmarkReviewPrice: 5250,
 });
 
 const successfulShort = measureOutcome({
@@ -53,18 +57,25 @@ const successfulShort = measureOutcome({
     selectionId: "selection-short-001",
     decision: "short",
   },
+
   horizon: "three-month",
+
   measurementDate: "2026-11-01",
-  companyPrice: 90,
-  benchmarkPrice: 5100,
+  reviewedAt: "2026-11-01",
+
+  companyReviewPrice: 90,
+  benchmarkReviewPrice: 5100,
 });
 
 const unsuccessfulLong = measureOutcome({
   selection: baseSelection,
   horizon: "six-month",
+
   measurementDate: "2027-02-01",
-  companyPrice: 95,
-  benchmarkPrice: 5500,
+  reviewedAt: "2027-02-01",
+
+  companyReviewPrice: 95,
+  benchmarkReviewPrice: 5500,
 });
 
 const pendingOutcome = measureOutcome({
@@ -73,12 +84,19 @@ const pendingOutcome = measureOutcome({
   measurementDate: "2027-08-01",
 });
 
-let invalidPriceProtected = false;
+let invalidEntryPriceProtected = false;
+let invalidReviewPriceProtected = false;
 
 try {
   calculateReturn(0, 100);
 } catch {
-  invalidPriceProtected = true;
+  invalidEntryPriceProtected = true;
+}
+
+try {
+  calculateReturn(100, 0);
+} catch {
+  invalidReviewPriceProtected = true;
 }
 
 export interface OutcomeEngineTestResults {
@@ -86,23 +104,30 @@ export interface OutcomeEngineTestResults {
   successfulShortPassed: boolean;
   unsuccessfulLongPassed: boolean;
   pendingOutcomePassed: boolean;
-  invalidPriceProtectionPassed: boolean;
+  invalidEntryPriceProtectionPassed: boolean;
+  invalidReviewPriceProtectionPassed: boolean;
   allPassed: boolean;
 }
 
 const successfulLongPassed =
+  successfulLong.companyReviewPrice === 110 &&
+  successfulLong.benchmarkReviewPrice === 5250 &&
   successfulLong.companyReturn === 10 &&
   successfulLong.benchmarkReturn === 5 &&
   successfulLong.relativeReturn === 5 &&
   successfulLong.status === "successful";
 
 const successfulShortPassed =
+  successfulShort.companyReviewPrice === 90 &&
+  successfulShort.benchmarkReviewPrice === 5100 &&
   successfulShort.companyReturn === -10 &&
   successfulShort.benchmarkReturn === 2 &&
   successfulShort.relativeReturn === -12 &&
   successfulShort.status === "successful";
 
 const unsuccessfulLongPassed =
+  unsuccessfulLong.companyReviewPrice === 95 &&
+  unsuccessfulLong.benchmarkReviewPrice === 5500 &&
   unsuccessfulLong.companyReturn === -5 &&
   unsuccessfulLong.benchmarkReturn === 10 &&
   unsuccessfulLong.relativeReturn === -15 &&
@@ -110,24 +135,37 @@ const unsuccessfulLongPassed =
 
 const pendingOutcomePassed =
   pendingOutcome.status === "pending" &&
+  pendingOutcome.companyReviewPrice === undefined &&
+  pendingOutcome.benchmarkReviewPrice === undefined &&
   pendingOutcome.companyReturn === undefined &&
-  pendingOutcome.relativeReturn === undefined;
+  pendingOutcome.benchmarkReturn === undefined &&
+  pendingOutcome.relativeReturn === undefined &&
+  pendingOutcome.reviewedAt === undefined;
 
-export const outcomeEngineTestResults: OutcomeEngineTestResults = {
-  successfulLongPassed,
-  successfulShortPassed,
-  unsuccessfulLongPassed,
-  pendingOutcomePassed,
-  invalidPriceProtectionPassed: invalidPriceProtected,
+export const outcomeEngineTestResults:
+  OutcomeEngineTestResults = {
+    successfulLongPassed,
+    successfulShortPassed,
+    unsuccessfulLongPassed,
+    pendingOutcomePassed,
 
-  allPassed:
-    successfulLongPassed &&
-    successfulShortPassed &&
-    unsuccessfulLongPassed &&
-    pendingOutcomePassed &&
-    invalidPriceProtected,
-};
+    invalidEntryPriceProtectionPassed:
+      invalidEntryPriceProtected,
+
+    invalidReviewPriceProtectionPassed:
+      invalidReviewPriceProtected,
+
+    allPassed:
+      successfulLongPassed &&
+      successfulShortPassed &&
+      unsuccessfulLongPassed &&
+      pendingOutcomePassed &&
+      invalidEntryPriceProtected &&
+      invalidReviewPriceProtected,
+  };
 
 if (!outcomeEngineTestResults.allPassed) {
-  throw new Error("Outcome engine tests failed.");
+  throw new Error(
+    "Outcome engine tests failed.",
+  );
 }

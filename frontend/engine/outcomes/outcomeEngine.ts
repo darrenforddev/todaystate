@@ -14,14 +14,27 @@ export function calculateReturn(
   entryPrice: number,
   currentPrice: number,
 ): number {
-  if (entryPrice <= 0) {
+  if (
+    !Number.isFinite(entryPrice) ||
+    entryPrice <= 0
+  ) {
     throw new Error(
       "Entry price must be greater than zero.",
     );
   }
 
+  if (
+    !Number.isFinite(currentPrice) ||
+    currentPrice <= 0
+  ) {
+    throw new Error(
+      "Current price must be greater than zero.",
+    );
+  }
+
   return roundPercentage(
-    ((currentPrice - entryPrice) / entryPrice) * 100,
+    ((currentPrice - entryPrice) / entryPrice) *
+      100,
   );
 }
 
@@ -38,7 +51,10 @@ export function evaluateOutcomeStatus(
   decision: SelectionDecision,
   relativeReturn: number,
 ): OutcomeStatus {
-  if (decision === "watch" || decision === "avoid") {
+  if (
+    decision === "watch" ||
+    decision === "avoid"
+  ) {
     return "inconclusive";
   }
 
@@ -60,45 +76,48 @@ export function evaluateOutcomeStatus(
 export interface MeasureOutcomeInputs {
   selection: SelectionSnapshot;
   horizon: OutcomeHorizon;
+
   measurementDate: string;
-  companyPrice?: number;
-  benchmarkPrice?: number;
+  reviewedAt?: string;
+
+  companyReviewPrice?: number;
+  benchmarkReviewPrice?: number;
 }
 
 export function measureOutcome({
   selection,
   horizon,
   measurementDate,
-  companyPrice,
-  benchmarkPrice,
+  reviewedAt,
+  companyReviewPrice,
+  benchmarkReviewPrice,
 }: MeasureOutcomeInputs): HorizonOutcome {
   if (
-    companyPrice === undefined ||
-    benchmarkPrice === undefined
+    companyReviewPrice === undefined ||
+    benchmarkReviewPrice === undefined
   ) {
     return {
       horizon,
       measurementDate,
-      companyPrice,
-      benchmarkPrice,
       status: "pending",
     };
   }
 
   const companyReturn = calculateReturn(
     selection.entryPrice,
-    companyPrice,
+    companyReviewPrice,
   );
 
   const benchmarkReturn = calculateReturn(
     selection.benchmarkEntryPrice,
-    benchmarkPrice,
+    benchmarkReviewPrice,
   );
 
-  const relativeReturn = calculateRelativeReturn(
-    companyReturn,
-    benchmarkReturn,
-  );
+  const relativeReturn =
+    calculateRelativeReturn(
+      companyReturn,
+      benchmarkReturn,
+    );
 
   const status = evaluateOutcomeStatus(
     selection.decision,
@@ -108,11 +127,16 @@ export function measureOutcome({
   return {
     horizon,
     measurementDate,
-    companyPrice,
-    benchmarkPrice,
+    reviewedAt:
+      reviewedAt ?? measurementDate,
+
+    companyReviewPrice,
+    benchmarkReviewPrice,
+
     companyReturn,
     benchmarkReturn,
     relativeReturn,
+
     status,
   };
 }

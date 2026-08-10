@@ -1,14 +1,26 @@
 import type { ConfidenceEvidence } from "./confidenceEvidence";
 import type { ConfidenceFactors } from "./confidenceFactors";
+
 import { getSourceQuality } from "./confidenceSourceRules";
 import { calculateHistoricalAccuracy } from "./historicalPerformance";
+
+import type { HistoricalPerformanceResult } from "../outcomes/historicalPerformance";
 
 function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
 
+function average(values: number[]): number {
+  return (
+    values.reduce(
+      (total, value) => total + value,
+      0,
+    ) / values.length
+  );
+}
+
 export function calculateEvidenceQuality(
-  evidence: ConfidenceEvidence
+  evidence: ConfidenceEvidence,
 ): number {
   if (evidence.sourceType) {
     return getSourceQuality(evidence.sourceType);
@@ -18,11 +30,11 @@ export function calculateEvidenceQuality(
 }
 
 export function calculateEvidenceHistoricalAccuracy(
-  evidence: ConfidenceEvidence
+  evidence: ConfidenceEvidence,
 ): number {
   if (evidence.historicalPerformance) {
     return calculateHistoricalAccuracy(
-      evidence.historicalPerformance
+      evidence.historicalPerformance,
     );
   }
 
@@ -31,7 +43,7 @@ export function calculateEvidenceHistoricalAccuracy(
 
 export function calculateEvidenceFreshness(
   evidence: ConfidenceEvidence,
-  asOf: Date = new Date()
+  asOf: Date = new Date(),
 ): number {
   if (evidence.observedAt && evidence.maxAgeDays) {
     const observed = new Date(evidence.observedAt);
@@ -39,13 +51,13 @@ export function calculateEvidenceFreshness(
     const observedDay = Date.UTC(
       observed.getUTCFullYear(),
       observed.getUTCMonth(),
-      observed.getUTCDate()
+      observed.getUTCDate(),
     );
 
     const currentDay = Date.UTC(
       asOf.getUTCFullYear(),
       asOf.getUTCMonth(),
-      asOf.getUTCDate()
+      asOf.getUTCDate(),
     );
 
     const ageDays =
@@ -57,7 +69,8 @@ export function calculateEvidenceFreshness(
     }
 
     const freshness =
-      100 - (ageDays / evidence.maxAgeDays) * 100;
+      100 -
+      (ageDays / evidence.maxAgeDays) * 100;
 
     return clamp(Math.round(freshness));
   }
@@ -65,9 +78,45 @@ export function calculateEvidenceFreshness(
   return clamp(evidence.freshness ?? 0);
 }
 
+function calculateCombinedHistoricalAccuracy(
+  evidence: ConfidenceEvidence[],
+  themeHistoricalPerformance?: HistoricalPerformanceResult,
+): number {
+  const indicatorHistoricalAccuracy = average(
+    evidence.map((item) =>
+      calculateEvidenceHistoricalAccuracy(item),
+    ),
+  );
+
+  /*
+   * A theme with no completed outcomes must not reduce confidence.
+   * In that case, the existing indicator-level score is retained.
+   */
+  if (
+    themeHistoricalPerformance?.adjustedSuccessRate ===
+    undefined
+  ) {
+    return indicatorHistoricalAccuracy;
+  }
+
+  /*
+   * The theme rate has already been adjusted towards 50% by the
+   * historical-performance engine when its sample is small.
+   * We therefore blend it directly with indicator history without
+   * applying the sample weight for a second time.
+   */
+  return average([
+    indicatorHistoricalAccuracy,
+    clamp(
+      themeHistoricalPerformance.adjustedSuccessRate,
+    ),
+  ]);
+}
+
 export function buildConfidenceFactors(
   evidence: ConfidenceEvidence[],
-  asOf: Date = new Date()
+  asOf: Date = new Date(),
+  themeHistoricalPerformance?: HistoricalPerformanceResult,
 ): ConfidenceFactors {
   if (evidence.length === 0) {
     return {
@@ -79,34 +128,30 @@ export function buildConfidenceFactors(
     };
   }
 
-  const average = (values: number[]) =>
-    values.reduce((total, value) => total + value, 0) /
-    values.length;
-
- const evidenceQuality = average(
-  evidence.map((item) =>
-    calculateEvidenceQuality(item)
-  )
-);
+  const evidenceQuality = average(
+    evidence.map((item) =>
+      calculateEvidenceQuality(item),
+    ),
+  );
 
   const evidenceFreshness = average(
     evidence.map((item) =>
-      calculateEvidenceFreshness(item, asOf)
-    )
+      calculateEvidenceFreshness(item, asOf),
+    ),
   );
 
- const historicalAccuracy = average(
-  evidence.map((item) =>
-    calculateEvidenceHistoricalAccuracy(item)
-  )
-);
+  const historicalAccuracy =
+    calculateCombinedHistoricalAccuracy(
+      evidence,
+      themeHistoricalPerformance,
+    );
 
   const supportiveCount = evidence.filter(
-    (item) => item.signal === "supportive"
+    (item) => item.signal === "supportive",
   ).length;
 
   const contradictoryCount = evidence.filter(
-    (item) => item.signal === "contradictory"
+    (item) => item.signal === "contradictory",
   ).length;
 
   const supportingEvidence =

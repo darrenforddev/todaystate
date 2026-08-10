@@ -60,9 +60,22 @@ function toDateOnly(value: Date): string {
 }
 
 function parseDateOnly(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
-  if (Number.isNaN(date.getTime())) {
+  if (!datePattern.test(value)) {
+    throw new Error(
+      `Invalid selection date: ${value}`,
+    );
+  }
+
+  const date = new Date(
+    `${value}T00:00:00.000Z`,
+  );
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== value
+  ) {
     throw new Error(
       `Invalid selection date: ${value}`,
     );
@@ -79,9 +92,9 @@ function addCalendarMonths(
   const sourceDay = sourceDate.getUTCDate();
 
   /*
-   * Move to the first day before changing the month. This
-   * prevents dates near the end of a month from overflowing
-   * into the following month.
+   * Move to the first day before changing the month.
+   * This prevents dates near the end of a month from
+   * overflowing into the following month.
    */
   const targetDate = new Date(
     Date.UTC(
@@ -116,7 +129,9 @@ function createSelectionId(
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  const uniquePart = crypto.randomUUID().slice(0, 8);
+  const uniquePart = crypto
+    .randomUUID()
+    .slice(0, 8);
 
   return [
     ticker || "selection",
@@ -141,8 +156,20 @@ function validateInput(
     throw new Error("A company name is required.");
   }
 
+  if (!input.benchmarkId.trim()) {
+    throw new Error("A benchmark ID is required.");
+  }
+
+  if (!input.benchmarkName.trim()) {
+    throw new Error(
+      "A benchmark name is required.",
+    );
+  }
+
   if (!input.thesis.trim()) {
-    throw new Error("A selection thesis is required.");
+    throw new Error(
+      "A selection thesis is required.",
+    );
   }
 
   if (
@@ -155,7 +182,9 @@ function validateInput(
   }
 
   if (
-    !Number.isFinite(input.benchmarkEntryPrice) ||
+    !Number.isFinite(
+      input.benchmarkEntryPrice,
+    ) ||
     input.benchmarkEntryPrice <= 0
   ) {
     throw new Error(
@@ -172,10 +201,6 @@ export function buildSelectionOutcomeRecord(
   const selectedAt =
     input.selectedAt ?? toDateOnly(new Date());
 
-  /*
-   * Validate an explicitly supplied date before building the
-   * snapshot and its future measurement dates.
-   */
   parseDateOnly(selectedAt);
 
   const selectionId = createSelectionId(
@@ -187,7 +212,9 @@ export function buildSelectionOutcomeRecord(
     selection: {
       selectionId,
       companyId: input.companyId.trim(),
-      ticker: input.ticker.trim().toUpperCase(),
+      ticker: input.ticker
+        .trim()
+        .toUpperCase(),
       companyName: input.companyName.trim(),
 
       decision: input.decision,
@@ -205,7 +232,8 @@ export function buildSelectionOutcomeRecord(
       themeConfidence: input.themeConfidence,
 
       benchmarkId: input.benchmarkId.trim(),
-      benchmarkName: input.benchmarkName.trim(),
+      benchmarkName:
+        input.benchmarkName.trim(),
       benchmarkEntryPrice:
         input.benchmarkEntryPrice,
 

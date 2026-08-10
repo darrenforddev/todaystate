@@ -40,7 +40,7 @@ export default function TodayScorePilotUniverse({
         </div>
       </div>
 
-      <div className="grid gap-px bg-slate-800/80 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-px bg-slate-800/80 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {companies.map((company) => {
           const hasLiveData = company.dataStatus === "live";
 
@@ -54,8 +54,8 @@ export default function TodayScorePilotUniverse({
                   companyName={company.companyName}
                   domain={company.brandDomain}
                 />
-                <div className="min-w-0">
-                  <h3 className="truncate font-bold text-white">
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="min-h-10 text-sm font-bold leading-5 text-white">
                     {company.companyName}
                   </h3>
                   <p className="mt-1 text-xs font-semibold text-cyan-300">

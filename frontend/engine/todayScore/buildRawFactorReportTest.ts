@@ -53,13 +53,13 @@ const results: ProviderDatasetResult[] = [
     meta: { symbol: "BT.A", currency: "GBP" },
     statistics: {
       valuations_metrics: {
-        market_capitalization: 20_000,
-        enterprise_value: 28_000,
+        market_capitalization: 2_000_000,
+        enterprise_value: 2_010_000,
         trailing_pe: 8,
-        forward_pe: 7,
-        price_to_sales_ttm: 1.2,
-        price_to_book_mrq: 1.5,
-        enterprise_to_ebitda: 5.6,
+        forward_pe: 10,
+        price_to_sales_ttm: 83.33,
+        price_to_book_mrq: 111.11,
+        enterprise_to_ebitda: 600,
       },
       financials: {
         most_recent_quarter: "2026-06-30",
@@ -164,13 +164,13 @@ const results: ProviderDatasetResult[] = [
       {
         date: "2027-03-31",
         period: "current_year",
-        current_estimate: 20,
-        "90_days_ago": 18,
+        current_estimate: 0.2,
+        "90_days_ago": 0.18,
       },
       {
         date: "2028-03-31",
         period: "next_year",
-        current_estimate: 22,
+        current_estimate: 0.22,
       },
     ],
   }),
@@ -194,6 +194,9 @@ const report = buildRawTodayScoreReport(
 );
 
 assert.equal(report.scoreStatus, "percentile-locked");
+assert.equal(report.unitValidation.status, "normalised");
+assert.equal(report.unitValidation.quoteToFinancialScale, 0.01);
+assert.equal(report.unitValidation.rejectedFactorCount, 0);
 assert.equal(report.datasets.length, 7);
 assert.equal(report.pillars.quality.availableFactorCount, 15);
 assert.equal(report.pillars.value.availableFactorCount, 9);
@@ -234,5 +237,46 @@ const relativeStrength = report.pillars.momentum.factors.find(
 );
 assert.equal(relativeStrength?.status, "unavailable");
 assert.match(relativeStrength?.explanation ?? "", /comparison-universe/);
+
+const rejectedResults = structuredClone(results);
+const rejectedStatisticsResult = rejectedResults.find(
+  (providerResult) => providerResult.dataset === "statistics",
+);
+
+if (!rejectedStatisticsResult?.payload) {
+  throw new Error("Statistics fixture missing.");
+}
+
+const rejectedStatisticsPayload = rejectedStatisticsResult.payload as {
+  statistics: {
+    valuations_metrics: {
+      market_capitalization: number;
+      enterprise_value: number;
+    };
+  };
+};
+rejectedStatisticsPayload.statistics.valuations_metrics.market_capitalization =
+  700_000;
+rejectedStatisticsPayload.statistics.valuations_metrics.enterprise_value =
+  710_000;
+
+const rejectedReport = buildRawTodayScoreReport(
+  company,
+  rejectedResults,
+  "2026-08-10T12:02:00.000Z",
+);
+const rejectedPriceToSales = rejectedReport.pillars.value.factors.find(
+  (factor) => factor.factorId === "price-to-sales",
+);
+const rejectedAltman = rejectedReport.pillars.quality.factors.find(
+  (factor) => factor.factorId === "altman-z-score",
+);
+
+assert.equal(rejectedReport.unitValidation.status, "rejected");
+assert.ok(rejectedReport.unitValidation.rejectedFactorCount >= 8);
+assert.equal(rejectedPriceToSales?.status, "rejected");
+assert.equal(rejectedPriceToSales?.rawValue, undefined);
+assert.match(rejectedPriceToSales?.explanation ?? "", /failed unit validation/);
+assert.equal(rejectedAltman?.status, "rejected");
 
 console.log("Raw TodayScore factor report tests passed.");

@@ -2,7 +2,20 @@ import TodayScoreScreener from "@/components/todayScore/TodayScoreScreener";
 import { screenerCompanyMetadata } from "@/data/screenerCompanies";
 import { todayScoreTestResults } from "@/engine/todayScore/todayScoreTest";
 
-export default function TodayScoreScreenerPage() {
+interface TodayScoreScreenerPageProps {
+  searchParams: Promise<{
+    company?: string | string[];
+  }>;
+}
+
+export default async function TodayScoreScreenerPage({
+  searchParams,
+}: TodayScoreScreenerPageProps) {
+  const companyParam = (await searchParams).company;
+  const selectedTicker = Array.isArray(companyParam)
+    ? companyParam[0]
+    : companyParam;
+
   return (
     <main className="min-h-screen bg-[#020817] px-5 py-10 text-white md:px-10 xl:px-12">
       <div className="mx-auto max-w-[1600px]">
@@ -32,8 +45,10 @@ export default function TodayScoreScreenerPage() {
         </div>
 
         <TodayScoreScreener
+          key={selectedTicker ?? "screener"}
           scoreResults={todayScoreTestResults}
           metadata={screenerCompanyMetadata}
+          initialSelectedTicker={selectedTicker}
         />
 
         <p className="mt-6 text-xs leading-5 text-slate-600">

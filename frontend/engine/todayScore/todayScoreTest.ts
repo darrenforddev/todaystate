@@ -16,10 +16,22 @@ import {
   explainTodayScore,
   type TodayScoreExplanation,
 } from "./todayScoreExplanation";
+import type {
+  MomentumScore,
+  QualityScore,
+  ValueScore,
+} from "./types";
+
+export interface TodayScoreTestBreakdown {
+  quality: QualityScore;
+  value: ValueScore;
+  momentum: MomentumScore;
+}
 
 export interface TodayScoreTestResult {
   companyId: string;
   todayScore: TodayScoreResult;
+  breakdown: TodayScoreTestBreakdown;
   classification: TodayScoreClassification;
   explanation: TodayScoreExplanation;
 }
@@ -56,6 +68,11 @@ export const todayScoreTestResults: TodayScoreTestResult[] =
     return {
       companyId,
       todayScore,
+      breakdown: {
+        quality,
+        value: valueResult.value,
+        momentum: momentumResult.momentum,
+      },
       classification,
       explanation,
     };

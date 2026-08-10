@@ -39,6 +39,11 @@ export const navigation: NavigationGroup[] = [
         icon: "🏢",
       },
       {
+        label: "TodayScore",
+        href: "/screener",
+        icon: "🎯",
+      },
+      {
         label: "Evidence",
         href: "/evidence",
         icon: "📊",

@@ -2,6 +2,7 @@ import { themes } from "@/data/themes";
 import { companies } from "@/data/companies";
 import { evidence } from "@/data/evidence";
 import { etfs } from "@/data/etfs";
+import Link from "next/link";
 
 export default function DeveloperDashboard() {
   return (
@@ -46,6 +47,23 @@ export default function DeveloperDashboard() {
             <StatusRow label="Application Shell" status="Healthy" />
           </div>
         </div>
+
+        {process.env.NODE_ENV !== "production" && (
+          <Link
+            href="/dev/twelve-data"
+            className="mt-8 flex items-center justify-between rounded-3xl border border-cyan-400/20 bg-cyan-400/[0.06] p-6 transition hover:border-cyan-300/40 hover:bg-cyan-400/[0.09]"
+          >
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
+                TodayScore provider
+              </p>
+              <p className="mt-2 text-lg font-black text-white">
+                Open Twelve Data diagnostics
+              </p>
+            </div>
+            <span className="text-2xl text-cyan-300">→</span>
+          </Link>
+        )}
       </div>
     </main>
   );

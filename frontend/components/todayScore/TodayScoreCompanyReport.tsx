@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 
 import type {
@@ -247,10 +245,8 @@ function PillarSection({
 
 export default function TodayScoreCompanyReport({
   report,
-  onBack,
 }: {
   report: ScreenerCompanyReport;
-  onBack?: () => void;
 }) {
   const { company, coverage, dataWarnings } = report;
   const { result } = company;
@@ -259,24 +255,13 @@ export default function TodayScoreCompanyReport({
   return (
     <div className="min-h-screen bg-[#020817] px-5 py-10 text-white md:px-10 xl:px-12">
       <div className="mx-auto max-w-[1500px]">
-        {onBack ? (
-          <Link
-            href="/screener"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-          >
-            <span aria-hidden="true">←</span>
-            Back to TodayScore Screener
-          </Link>
-        ) : (
-          <Link
-            href="/screener"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-          >
-            <span aria-hidden="true">←</span>
-            Back to TodayScore Screener
-          </Link>
-        )}
+        <Link
+          href="/screener"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+        >
+          <span aria-hidden="true">←</span>
+          Back to TodayScore Screener
+        </Link>
 
         <header className="mt-6 flex flex-col gap-6 border-b border-slate-800 pb-8 lg:flex-row lg:items-end lg:justify-between">
           <div>

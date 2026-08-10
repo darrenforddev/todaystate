@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type { TodayScoreTestResult } from "@/engine/todayScore/todayScoreTest";
 import type {
@@ -68,6 +69,7 @@ export default function TodayScoreScreener({
   scoreResults,
   metadata,
 }: TodayScoreScreenerProps) {
+  const router = useRouter();
   const [filters, setFilters] = useState<ScreenerFilters>(
     defaultScreenerFilters,
   );
@@ -218,14 +220,37 @@ export default function TodayScoreScreener({
               </thead>
               <tbody className="divide-y divide-slate-800/80">
                 {filteredCompanies.map((company, index) => (
-                  <tr key={company.companyId} className="transition hover:bg-white/[0.025]">
+                  <tr
+                    key={company.companyId}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Open ${company.companyName} TodayScore report`}
+                    className="group cursor-pointer transition hover:bg-white/[0.035] focus:bg-white/[0.035] focus:outline-none"
+                    onClick={() =>
+                      router.push(`/screener/${company.ticker.toLowerCase()}`)
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        router.push(
+                          `/screener/${company.ticker.toLowerCase()}`,
+                        );
+                      }
+                    }}
+                  >
                     <td className="px-5 py-5">
                       <div className="flex items-center gap-3">
                         <span className="w-5 text-xs font-bold text-slate-600">{index + 1}</span>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="font-bold text-white">{company.companyName}</p>
                           <p className="mt-1 text-xs text-slate-500">{company.ticker} · {company.sector} · {company.industry}</p>
                         </div>
+                        <span
+                          aria-hidden="true"
+                          className="text-lg text-slate-600 transition group-hover:text-cyan-300"
+                        >
+                          →
+                        </span>
                       </div>
                     </td>
                     <td className="px-3 py-5">

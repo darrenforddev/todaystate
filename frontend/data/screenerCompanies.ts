@@ -9,6 +9,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Industrial Machinery",
     themeId: "industrial-recovery",
     themeName: "Industrial Recovery",
+    themeAlignment: "supportive",
+    themeRationale:
+      "Improving manufacturing activity and new-order momentum support demand for industrial machinery.",
     themeConfidence: 88,
     historicalSuccessRate: 74,
     completedOutcomes: 19,
@@ -21,6 +24,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Electronic Components",
     themeId: "ai-infrastructure",
     themeName: "AI Infrastructure",
+    themeAlignment: "mixed",
+    themeRationale:
+      "The structural AI spending theme is supportive, but company-level quality and price momentum remain too weak to confirm it.",
     themeConfidence: 96,
     historicalSuccessRate: 61,
     completedOutcomes: 18,
@@ -33,6 +39,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Packaged Foods",
     themeId: "consumer-slowdown",
     themeName: "Consumer Slowdown",
+    themeAlignment: "contradictory",
+    themeRationale:
+      "Weak consumer demand and input-cost pressure create an adverse backdrop for a low-ranked packaged-food business.",
     themeConfidence: 79,
     historicalSuccessRate: 71,
     completedOutcomes: 14,
@@ -45,6 +54,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Data-centre Equipment",
     themeId: "ai-infrastructure",
     themeName: "AI Infrastructure",
+    themeAlignment: "supportive",
+    themeRationale:
+      "Accelerating data-centre investment supports demand for specialist computing and power equipment.",
     themeConfidence: 96,
     historicalSuccessRate: 82,
     completedOutcomes: 22,
@@ -57,6 +69,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Integrated Energy",
     themeId: "energy-transition",
     themeName: "Energy Transition",
+    themeAlignment: "mixed",
+    themeRationale:
+      "Long-term transition spending is positive, while near-term commodity and financing conditions remain uneven.",
     themeConfidence: 76,
     historicalSuccessRate: 55,
     completedOutcomes: 11,
@@ -69,6 +84,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Specialty Manufacturing",
     themeId: "industrial-recovery",
     themeName: "Industrial Recovery",
+    themeAlignment: "supportive",
+    themeRationale:
+      "A recovering capital-expenditure cycle should improve demand for specialty manufacturing capacity.",
     themeConfidence: 88,
     historicalSuccessRate: 68,
     completedOutcomes: 16,
@@ -81,6 +99,9 @@ export const screenerCompanyMetadata: ScreenerCompanyMetadata[] = [
     industry: "Grid Infrastructure",
     themeId: "power-grid",
     themeName: "Power Grid",
+    themeAlignment: "supportive",
+    themeRationale:
+      "Grid reinforcement and electrification investment provide a favourable multi-year demand backdrop.",
     themeConfidence: 90,
     historicalSuccessRate: 78,
     completedOutcomes: 20,

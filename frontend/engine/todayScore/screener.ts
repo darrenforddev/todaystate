@@ -1,6 +1,7 @@
 import type { TodayScoreTestResult } from "./todayScoreTest";
 
 export type ScreenerDecision = "long" | "short" | "watch";
+export type ThemeAlignment = "supportive" | "mixed" | "contradictory";
 
 export interface ScreenerCompanyMetadata {
   companyId: string;
@@ -10,6 +11,8 @@ export interface ScreenerCompanyMetadata {
   industry: string;
   themeId: string;
   themeName: string;
+  themeAlignment: ThemeAlignment;
+  themeRationale: string;
   themeConfidence: number;
   historicalSuccessRate?: number;
   completedOutcomes: number;

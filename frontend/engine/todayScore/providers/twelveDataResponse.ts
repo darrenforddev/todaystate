@@ -38,6 +38,7 @@ function getSampleSize(payload: unknown): number | undefined {
     "balance_sheet",
     "cash_flow",
     "eps_trend",
+    "eps_revision",
     "eps_revisions",
   ];
 

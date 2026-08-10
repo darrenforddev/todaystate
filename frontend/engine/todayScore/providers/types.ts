@@ -46,9 +46,22 @@ export interface ProviderCoverageProbe {
   sampleSize?: number;
 }
 
+export interface ProviderDatasetRequest {
+  priceHistoryOutputSize?: number;
+}
+
+export interface ProviderDatasetResult extends ProviderCoverageProbe {
+  payload?: unknown;
+}
+
 export interface FinancialDataProvider {
   readonly id: string;
   readonly name: string;
+  fetchDataset(
+    company: ProviderCompanyIdentity,
+    dataset: TodayScoreDataset,
+    options?: ProviderDatasetRequest,
+  ): Promise<ProviderDatasetResult>;
   probeCoverage(
     company: ProviderCompanyIdentity,
     dataset: TodayScoreDataset,

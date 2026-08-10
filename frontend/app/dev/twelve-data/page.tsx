@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
 import TwelveDataDiagnostic from "@/components/todayScore/TwelveDataDiagnostic";
+import TwelveDataRawFactorLab from "@/components/todayScore/TwelveDataRawFactorLab";
 import { realCompanyUniverse } from "@/data/realCompanyUniverse";
 import { hasTwelveDataApiKey } from "@/engine/todayScore/providers/twelveData";
 
@@ -29,6 +30,9 @@ export default async function TwelveDataDiagnosticPage() {
         <div className="mt-9">
           <TwelveDataDiagnostic
             companies={realCompanyUniverse}
+            keyConfigured={hasTwelveDataApiKey()}
+          />
+          <TwelveDataRawFactorLab
             keyConfigured={hasTwelveDataApiKey()}
           />
         </div>

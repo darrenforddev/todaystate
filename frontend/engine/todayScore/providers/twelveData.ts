@@ -4,6 +4,8 @@ import type {
   FinancialDataProvider,
   ProviderCompanyIdentity,
   ProviderCoverageProbe,
+  ProviderDatasetRequest,
+  ProviderDatasetResult,
   TodayScoreDataset,
 } from "./types";
 import { assessTwelveDataResponse } from "./twelveDataResponse";
@@ -32,6 +34,7 @@ export const twelveDataLseTrialCompany: ProviderCompanyIdentity = {
 function buildDatasetUrl(
   company: ProviderCompanyIdentity,
   dataset: TodayScoreDataset,
+  options: ProviderDatasetRequest = {},
 ): URL {
   const endpoint = endpointByDataset[dataset];
   const url = new URL(endpoint, `${TWELVE_DATA_BASE_URL}/`);
@@ -41,8 +44,12 @@ function buildDatasetUrl(
 
   if (dataset === "price-history") {
     url.searchParams.set("interval", "1day");
-    url.searchParams.set("outputsize", "5");
+    url.searchParams.set(
+      "outputsize",
+      String(options.priceHistoryOutputSize ?? 5),
+    );
     url.searchParams.set("order", "DESC");
+    url.searchParams.set("adjust", "all");
   }
 
   if (
@@ -81,12 +88,13 @@ export class TwelveDataProvider implements FinancialDataProvider {
     }
   }
 
-  async probeCoverage(
+  async fetchDataset(
     company: ProviderCompanyIdentity,
     dataset: TodayScoreDataset,
-  ): Promise<ProviderCoverageProbe> {
+    options: ProviderDatasetRequest = {},
+  ): Promise<ProviderDatasetResult> {
     const endpoint = endpointByDataset[dataset];
-    const url = buildDatasetUrl(company, dataset);
+    const url = buildDatasetUrl(company, dataset, options);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -115,6 +123,8 @@ export class TwelveDataProvider implements FinancialDataProvider {
         dataset,
         endpoint: `/${endpoint}`,
         ...assessment,
+        payload:
+          assessment.status === "available" ? payload : undefined,
         checkedAt: new Date().toISOString(),
       };
     } catch (error) {
@@ -137,6 +147,31 @@ export class TwelveDataProvider implements FinancialDataProvider {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  async probeCoverage(
+    company: ProviderCompanyIdentity,
+    dataset: TodayScoreDataset,
+  ): Promise<ProviderCoverageProbe> {
+    const result = await this.fetchDataset(
+      company,
+      dataset,
+    );
+
+    return {
+      providerId: result.providerId,
+      providerName: result.providerName,
+      companyId: result.companyId,
+      companyName: result.companyName,
+      symbol: result.symbol,
+      dataset: result.dataset,
+      endpoint: result.endpoint,
+      status: result.status,
+      message: result.message,
+      checkedAt: result.checkedAt,
+      httpStatus: result.httpStatus,
+      sampleSize: result.sampleSize,
+    };
   }
 }
 

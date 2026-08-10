@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
+import TodayScoreCompanyReport from "@/components/todayScore/TodayScoreCompanyReport";
 import type { TodayScoreTestResult } from "@/engine/todayScore/todayScoreTest";
 import type {
   ScreenerCompanyMetadata,
@@ -14,10 +14,12 @@ import {
   defaultScreenerFilters,
   filterScreenerCompanies,
 } from "@/engine/todayScore/screener";
+import { buildScreenerCompanyReport } from "@/engine/todayScore/screenerReport";
 
 interface TodayScoreScreenerProps {
   scoreResults: TodayScoreTestResult[];
   metadata: ScreenerCompanyMetadata[];
+  initialSelectedTicker?: string;
 }
 
 const decisionStyles: Record<ScreenerDecision, string> = {
@@ -68,10 +70,13 @@ function RangeFilter({
 export default function TodayScoreScreener({
   scoreResults,
   metadata,
+  initialSelectedTicker,
 }: TodayScoreScreenerProps) {
-  const router = useRouter();
   const [filters, setFilters] = useState<ScreenerFilters>(
     defaultScreenerFilters,
+  );
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(
+    initialSelectedTicker?.toLowerCase() ?? null,
   );
 
   const companies = useMemo(
@@ -83,6 +88,32 @@ export default function TodayScoreScreener({
     () => filterScreenerCompanies(companies, filters),
     [companies, filters],
   );
+
+  const selectedCompany = useMemo(
+    () =>
+      companies.find(
+        (company) => company.ticker.toLowerCase() === selectedTicker,
+      ),
+    [companies, selectedTicker],
+  );
+
+  useEffect(() => {
+    if (!selectedCompany) return;
+
+    const previousOverflow = document.body.style.overflow;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedTicker(null);
+    }
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedCompany]);
 
   const sectors = [...new Set(companies.map((company) => company.sector))].sort();
   const themes = Array.from(
@@ -102,7 +133,22 @@ export default function TodayScoreScreener({
   }
 
   return (
-    <div className="mt-8 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+    <>
+      {selectedCompany && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedCompany.companyName} TodayScore report`}
+          className="fixed inset-0 z-50 overflow-y-auto bg-[#020817]"
+        >
+          <TodayScoreCompanyReport
+            report={buildScreenerCompanyReport(selectedCompany)}
+            onBack={() => setSelectedTicker(null)}
+          />
+        </div>
+      )}
+
+      <div className="mt-8 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
       <aside className="h-fit rounded-3xl border border-slate-700/70 bg-[#07111f] p-5 xl:sticky xl:top-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">Research filters</h2>
@@ -226,15 +272,11 @@ export default function TodayScoreScreener({
                     tabIndex={0}
                     aria-label={`Open ${company.companyName} TodayScore report`}
                     className="group cursor-pointer transition hover:bg-white/[0.035] focus:bg-white/[0.035] focus:outline-none"
-                    onClick={() =>
-                      router.push(`/screener/${company.ticker.toLowerCase()}`)
-                    }
+                    onClick={() => setSelectedTicker(company.ticker.toLowerCase())}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        router.push(
-                          `/screener/${company.ticker.toLowerCase()}`,
-                        );
+                        setSelectedTicker(company.ticker.toLowerCase());
                       }
                     }}
                   >
@@ -242,8 +284,19 @@ export default function TodayScoreScreener({
                       <div className="flex items-center gap-3">
                         <span className="w-5 text-xs font-bold text-slate-600">{index + 1}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="font-bold text-white">{company.companyName}</p>
+                          <a
+                            href={`/screener?company=${encodeURIComponent(company.ticker.toLowerCase())}`}
+                            className="font-bold text-white underline-offset-4 hover:text-cyan-200 hover:underline"
+                          >
+                            {company.companyName}
+                          </a>
                           <p className="mt-1 text-xs text-slate-500">{company.ticker} · {company.sector} · {company.industry}</p>
+                          <a
+                            href={`/screener?company=${encodeURIComponent(company.ticker.toLowerCase())}`}
+                            className="mt-2 inline-flex text-xs font-bold text-cyan-300 underline underline-offset-4"
+                          >
+                            View full report
+                          </a>
                         </div>
                         <span
                           aria-hidden="true"
@@ -283,6 +336,7 @@ export default function TodayScoreScreener({
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

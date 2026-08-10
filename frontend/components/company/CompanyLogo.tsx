@@ -37,7 +37,7 @@ function buildLogoSource(domain: string, clientId: string): string {
   const identifier = encodeURIComponent(domain.trim().toLowerCase());
   const credential = encodeURIComponent(clientId);
 
-  return `https://cdn.brandfetch.io/domain/${identifier}/w/160/h/160/fallback/404/type/icon?c=${credential}`;
+  return `https://cdn.brandfetch.io/domain/${identifier}?c=${credential}`;
 }
 
 export default function CompanyLogo({

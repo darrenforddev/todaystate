@@ -9,6 +9,58 @@ assert.equal(quoteToFinancialScale("GBX", "GBP"), 0.01);
 assert.equal(quoteToFinancialScale("GBP", "GBP"), 1);
 assert.equal(quoteToFinancialScale("USD", "GBP"), undefined);
 
+const mislabeledLondonPence = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XLON",
+  symbol: "BT.A:LSE",
+  latestClose: 200,
+  sharesOutstanding: 10_000,
+  reportedMarketCap: 20_000,
+  reportedEnterpriseValue: 30_000,
+  totalDebt: 12_000,
+  totalCash: 2_000,
+});
+
+assert.equal(mislabeledLondonPence.status, "normalised");
+assert.equal(mislabeledLondonPence.quoteToFinancialScale, 0.01);
+assert.equal(mislabeledLondonPence.latestPriceInFinancialCurrency, 2);
+assert.equal(mislabeledLondonPence.marketCap, 20_000);
+assert.equal(mislabeledLondonPence.enterpriseValue, 30_000);
+assert.match(mislabeledLondonPence.marketCapMessage, /reconciled uniquely/);
+assert.match(mislabeledLondonPence.marketCapMessage, /scale 0.01/);
+
+const sameNumbersWithoutLondonEvidence = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XNYS",
+  latestClose: 200,
+  sharesOutstanding: 10_000,
+  reportedMarketCap: 20_000,
+  reportedEnterpriseValue: 30_000,
+  totalDebt: 12_000,
+  totalCash: 2_000,
+});
+
+assert.equal(sameNumbersWithoutLondonEvidence.status, "rejected");
+assert.equal(sameNumbersWithoutLondonEvidence.marketCap, undefined);
+
+const ambiguousLondonUnits = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XLON",
+  latestClose: 200,
+  sharesOutstanding: 10_000,
+  reportedMarketCap: 2_000_000,
+  reportedEnterpriseValue: 2_010_000,
+  totalDebt: 12_000,
+  totalCash: 2_000,
+});
+
+assert.equal(ambiguousLondonUnits.status, "rejected");
+assert.equal(ambiguousLondonUnits.marketCap, undefined);
+assert.match(ambiguousLondonUnits.marketCapMessage, /ambiguous/);
+
 const alreadySterling = validateMarketValues({
   quoteCurrency: "GBX",
   financialCurrency: "GBP",

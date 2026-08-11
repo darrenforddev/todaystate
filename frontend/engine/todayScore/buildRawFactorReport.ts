@@ -311,6 +311,7 @@ function balanceDebt(record: JsonRecord | undefined): number | undefined {
 }
 
 function marketValueValidationFor(
+  company: ProviderCompanyIdentity,
   results: readonly ProviderDatasetResult[],
 ): MarketValueValidation {
   const priceResult = resultFor(results, "price-history");
@@ -327,6 +328,8 @@ function marketValueValidationFor(
     quoteCurrency: currencyFor(priceResult),
     financialCurrency:
       currencyFor(statisticsResult) ?? currencyFor(incomeResult),
+    exchangeMic: company.exchangeMic,
+    symbol: priceResult?.symbol ?? company.ticker,
     latestClose: latestPrice?.close,
     sharesOutstanding: firstNumber(financials, [
       "balance_sheet.total_common_shares_outstanding",
@@ -1213,7 +1216,7 @@ export function buildRawTodayScoreReport(
   generatedAt = new Date().toISOString(),
 ): RawTodayScoreReport {
   const provider = results[0];
-  const marketValues = marketValueValidationFor(results);
+  const marketValues = marketValueValidationFor(company, results);
   const quality = buildPillar(
     "quality",
     qualityFactorDefinitions,

@@ -46,20 +46,20 @@ const priceValues = Array.from({ length: 400 }, (_, index) => {
 
 const results: ProviderDatasetResult[] = [
   result("price-history", {
-    meta: { symbol: "BT.A", currency: "GBX" },
+    meta: { symbol: "BT.A", currency: "GBP" },
     values: priceValues,
   }),
   result("statistics", {
     meta: { symbol: "BT.A", currency: "GBP" },
     statistics: {
       valuations_metrics: {
-        market_capitalization: 2_000_000,
-        enterprise_value: 2_010_000,
+        market_capitalization: 20_000,
+        enterprise_value: 30_000,
         trailing_pe: 8,
         forward_pe: 10,
-        price_to_sales_ttm: 83.33,
-        price_to_book_mrq: 111.11,
-        enterprise_to_ebitda: 600,
+        price_to_sales_ttm: 0.83,
+        price_to_book_mrq: 1.11,
+        enterprise_to_ebitda: 6,
       },
       financials: {
         most_recent_quarter: "2026-06-30",

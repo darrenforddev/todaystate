@@ -197,6 +197,15 @@ assert.equal(report.scoreStatus, "percentile-locked");
 assert.equal(report.unitValidation.status, "normalised");
 assert.equal(report.unitValidation.quoteToFinancialScale, 0.01);
 assert.equal(report.unitValidation.rejectedFactorCount, 0);
+assert.equal(report.unitValidation.diagnostics.exchangeMic, "XLON");
+assert.equal(report.unitValidation.diagnostics.latestClose, 199.75);
+assert.equal(report.unitValidation.diagnostics.sharesOutstanding, 9_500);
+assert.equal(
+  report.unitValidation.diagnostics.candidates.find(
+    (candidate) => candidate.scale === 0.01,
+  )?.selected,
+  true,
+);
 assert.equal(report.datasets.length, 7);
 assert.equal(report.pillars.quality.availableFactorCount, 15);
 assert.equal(report.pillars.value.availableFactorCount, 9);
@@ -274,6 +283,12 @@ const rejectedAltman = rejectedReport.pillars.quality.factors.find(
 
 assert.equal(rejectedReport.unitValidation.status, "rejected");
 assert.ok(rejectedReport.unitValidation.rejectedFactorCount >= 8);
+assert.equal(
+  rejectedReport.unitValidation.diagnostics.candidates.some(
+    (candidate) => candidate.selected,
+  ),
+  false,
+);
 assert.equal(rejectedPriceToSales?.status, "rejected");
 assert.equal(rejectedPriceToSales?.rawValue, undefined);
 assert.match(rejectedPriceToSales?.explanation ?? "", /failed unit validation/);

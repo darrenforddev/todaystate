@@ -35,6 +35,24 @@ function formatRawValue(value: number, unit: RawFactorUnit | undefined): string 
   return formatted;
 }
 
+function formatDiagnosticNumber(value: number | undefined): string {
+  if (value === undefined) {
+    return "Unavailable";
+  }
+
+  return new Intl.NumberFormat("en-GB", {
+    maximumFractionDigits: 4,
+  }).format(value);
+}
+
+function formatDifference(value: number | undefined): string {
+  if (value === undefined) {
+    return "Unavailable";
+  }
+
+  return `${(value * 100).toFixed(2)}%`;
+}
+
 function FactorRow({ factor }: { factor: RawFactorResult }) {
   const available = factor.status === "available" && factor.rawValue !== undefined;
   const rejected = factor.status === "rejected";
@@ -141,8 +159,9 @@ export default function TwelveDataRawFactorLab({
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
               This explicit development action makes seven sequential Twelve
               Data requests for BT.A, validates every field, and returns only
-              derived factors and source metadata to the browser. It does not
-              create a Quality, Value, Momentum or overall TodayScore.
+              validated raw reconciliation inputs, derived factors and source
+              metadata to the browser. It does not create a Quality, Value,
+              Momentum or overall TodayScore.
             </p>
           </div>
           <button
@@ -235,6 +254,98 @@ export default function TwelveDataRawFactorLab({
                   <li key={validationMessage}>• {validationMessage}</li>
                 ))}
               </ul>
+
+              <details className="mt-4 rounded-xl border border-white/10 bg-black/15 p-4" open>
+                <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.14em] text-cyan-200">
+                  Raw reconciliation diagnostics · development only
+                </summary>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  These are the exact parsed provider inputs and both quote-scale
+                  calculations. They diagnose unit mismatches and never unlock a
+                  factor or score.
+                </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    ["Listing", `${report.unitValidation.diagnostics.exchangeMic ?? "unknown"} · ${report.unitValidation.diagnostics.symbol ?? "unknown"}`],
+                    ["Latest adjusted close", formatDiagnosticNumber(report.unitValidation.diagnostics.latestClose)],
+                    ["Shares outstanding", formatDiagnosticNumber(report.unitValidation.diagnostics.sharesOutstanding)],
+                    ["Reported market cap", formatDiagnosticNumber(report.unitValidation.diagnostics.reportedMarketCap)],
+                    ["Reported enterprise value", formatDiagnosticNumber(report.unitValidation.diagnostics.reportedEnterpriseValue)],
+                    ["Total debt", formatDiagnosticNumber(report.unitValidation.diagnostics.totalDebt)],
+                    ["Total cash", formatDiagnosticNumber(report.unitValidation.diagnostics.totalCash)],
+                    ["London listing evidence", report.unitValidation.diagnostics.londonListing ? "Yes" : "No"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg border border-white/[0.07] bg-black/20 px-3 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+                        {label}
+                      </p>
+                      <p className="mt-1 break-words text-sm font-bold text-slate-200">
+                        {value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {report.unitValidation.diagnostics.candidates.map((candidate) => (
+                    <div
+                      key={candidate.scale}
+                      className={`rounded-xl border p-4 ${
+                        candidate.selected
+                          ? "border-cyan-300/30 bg-cyan-300/[0.07]"
+                          : candidate.directMatch || candidate.scaledMatch
+                            ? "border-amber-300/25 bg-amber-300/[0.06]"
+                            : "border-white/10 bg-black/20"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-black text-white">
+                            Candidate scale {candidate.scale}
+                          </p>
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+                            {candidate.source.replaceAll("-", " ")}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-300">
+                          {candidate.selected
+                            ? "Selected uniquely"
+                            : candidate.directMatch || candidate.scaledMatch
+                              ? "Matched but not unique"
+                              : "No match"}
+                        </span>
+                      </div>
+                      <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-xs">
+                        <dt className="text-slate-500">Close × scale</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDiagnosticNumber(candidate.latestPriceInFinancialCurrency)}
+                        </dd>
+                        <dt className="text-slate-500">Close × scale × shares</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDiagnosticNumber(candidate.independentlyDerivedMarketCap)}
+                        </dd>
+                        <dt className="text-slate-500">Reported market cap</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDiagnosticNumber(candidate.reportedMarketCap)}
+                        </dd>
+                        <dt className="text-slate-500">Reported cap × scale</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDiagnosticNumber(candidate.reportedMarketCapAtScale)}
+                        </dd>
+                        <dt className="text-slate-500">Direct difference</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDifference(candidate.directRelativeDifference)}
+                        </dd>
+                        <dt className="text-slate-500">Scaled-cap difference</dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDifference(candidate.scaledRelativeDifference)}
+                        </dd>
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
           </div>
 

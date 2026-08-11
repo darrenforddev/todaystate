@@ -1253,6 +1253,7 @@ export function buildRawTodayScoreReport(
       quoteToFinancialScale: marketValues.quoteToFinancialScale,
       messages: marketValues.messages,
       rejectedFactorCount,
+      diagnostics: marketValues.diagnostics,
     },
     datasets: results.map((result) => ({
       dataset: result.dataset,

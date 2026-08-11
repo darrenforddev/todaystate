@@ -22,6 +22,34 @@ export interface MarketValueValidation {
   marketCapMessage: string;
   enterpriseValueMessage: string;
   messages: string[];
+  diagnostics: MarketValueDiagnostics;
+}
+
+export interface MarketValueScaleDiagnostic {
+  scale: number;
+  source: "declared-currency" | "lse-pence-candidate";
+  latestPriceInFinancialCurrency?: number;
+  independentlyDerivedMarketCap?: number;
+  reportedMarketCap?: number;
+  reportedMarketCapAtScale?: number;
+  directRelativeDifference?: number;
+  scaledRelativeDifference?: number;
+  directMatch: boolean;
+  scaledMatch: boolean;
+  selected: boolean;
+}
+
+export interface MarketValueDiagnostics {
+  exchangeMic?: string;
+  symbol?: string;
+  londonListing: boolean;
+  latestClose?: number;
+  sharesOutstanding?: number;
+  reportedMarketCap?: number;
+  reportedEnterpriseValue?: number;
+  totalDebt?: number;
+  totalCash?: number;
+  candidates: MarketValueScaleDiagnostic[];
 }
 
 const RECONCILIATION_TOLERANCE = 0.25;
@@ -123,6 +151,53 @@ function reconcileScale(
   return undefined;
 }
 
+function buildScaleDiagnostic(
+  input: MarketValueValidationInput,
+  scale: number,
+  declaredScale: number | undefined,
+  selectedScale: number | undefined,
+): MarketValueScaleDiagnostic {
+  const latestPriceInFinancialCurrency = finite(input.latestClose)
+    ? input.latestClose * scale
+    : undefined;
+  const independentlyDerivedMarketCap =
+    finite(latestPriceInFinancialCurrency) && finite(input.sharesOutstanding)
+      ? latestPriceInFinancialCurrency * input.sharesOutstanding
+      : undefined;
+  const reportedMarketCapAtScale = finite(input.reportedMarketCap)
+    ? input.reportedMarketCap * scale
+    : undefined;
+  const directRelativeDifference =
+    finite(input.reportedMarketCap) && finite(independentlyDerivedMarketCap)
+      ? relativeDifference(input.reportedMarketCap, independentlyDerivedMarketCap)
+      : undefined;
+  const scaledRelativeDifference =
+    scale !== 1 &&
+    finite(reportedMarketCapAtScale) &&
+    finite(independentlyDerivedMarketCap)
+      ? relativeDifference(reportedMarketCapAtScale, independentlyDerivedMarketCap)
+      : undefined;
+
+  return {
+    scale,
+    source:
+      scale === declaredScale ? "declared-currency" : "lse-pence-candidate",
+    latestPriceInFinancialCurrency,
+    independentlyDerivedMarketCap,
+    reportedMarketCap: input.reportedMarketCap,
+    reportedMarketCapAtScale,
+    directRelativeDifference,
+    scaledRelativeDifference,
+    directMatch:
+      directRelativeDifference !== undefined &&
+      directRelativeDifference <= RECONCILIATION_TOLERANCE,
+    scaledMatch:
+      scaledRelativeDifference !== undefined &&
+      scaledRelativeDifference <= RECONCILIATION_TOLERANCE,
+    selected: scale === selectedScale,
+  };
+}
+
 export function quoteToFinancialScale(
   quoteCurrency: string | undefined,
   financialCurrency: string | undefined,
@@ -159,6 +234,7 @@ export function validateMarketValues(
   });
   const reconciliation =
     reconciliations.length === 1 ? reconciliations[0] : undefined;
+  const candidates = scaleCandidates(input);
   const scale = reconciliation?.scale ?? declaredScale;
   const latestPriceInFinancialCurrency =
     reconciliation?.latestPriceInFinancialCurrency ??
@@ -243,6 +319,25 @@ export function validateMarketValues(
     marketCapMessage,
     enterpriseValueMessage,
     messages: [marketCapMessage, enterpriseValueMessage],
+    diagnostics: {
+      exchangeMic: input.exchangeMic,
+      symbol: input.symbol,
+      londonListing: isLondonListing(input),
+      latestClose: input.latestClose,
+      sharesOutstanding: input.sharesOutstanding,
+      reportedMarketCap: input.reportedMarketCap,
+      reportedEnterpriseValue: input.reportedEnterpriseValue,
+      totalDebt: input.totalDebt,
+      totalCash: input.totalCash,
+      candidates: candidates.map((candidate) =>
+        buildScaleDiagnostic(
+          input,
+          candidate,
+          declaredScale,
+          reconciliation?.scale,
+        ),
+      ),
+    },
   };
 }
 

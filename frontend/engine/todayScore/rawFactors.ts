@@ -1,5 +1,6 @@
 import type { TodayScorePillar } from "./types";
 import type { FactorDirection } from "./qualityFactors";
+import type { MarketValueDiagnostics } from "./unitValidation";
 import type {
   ProviderCompanyIdentity,
   ProviderCoverageStatus,
@@ -22,6 +23,7 @@ export interface RawUnitValidation {
   quoteToFinancialScale?: number;
   messages: string[];
   rejectedFactorCount: number;
+  diagnostics: MarketValueDiagnostics;
 }
 
 export interface RawFactorEvidence {

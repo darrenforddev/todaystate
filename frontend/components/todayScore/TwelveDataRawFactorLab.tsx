@@ -240,9 +240,8 @@ export default function TwelveDataRawFactorLab({
                   <p className="mt-1 text-xs text-slate-400">
                     Quote {report.unitValidation.quoteCurrency ?? "unknown"} · Financials{" "}
                     {report.unitValidation.financialCurrency ?? "unknown"}
-                    {report.unitValidation.quoteToFinancialScale !== undefined
-                      ? ` · Scale ${report.unitValidation.quoteToFinancialScale}`
-                      : ""}
+                    {` · Quote scale ${report.unitValidation.quoteToFinancialScale ?? "unverified"}`}
+                    {` · Market-cap scale ${report.unitValidation.marketCapScale ?? "unverified"}`}
                   </p>
                 </div>
                 <span className="w-fit rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-slate-200">
@@ -294,7 +293,9 @@ export default function TwelveDataRawFactorLab({
                       className={`rounded-xl border p-4 ${
                         candidate.selected
                           ? "border-cyan-300/30 bg-cyan-300/[0.07]"
-                          : candidate.directMatch || candidate.scaledMatch
+                          : candidate.directMatch ||
+                              candidate.scaledMatch ||
+                              candidate.enterpriseValueMatch
                             ? "border-amber-300/25 bg-amber-300/[0.06]"
                             : "border-white/10 bg-black/20"
                       }`}
@@ -311,7 +312,9 @@ export default function TwelveDataRawFactorLab({
                         <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-300">
                           {candidate.selected
                             ? "Selected uniquely"
-                            : candidate.directMatch || candidate.scaledMatch
+                            : candidate.directMatch ||
+                                candidate.scaledMatch ||
+                                candidate.enterpriseValueMatch
                               ? "Matched but not unique"
                               : "No match"}
                         </span>
@@ -340,6 +343,22 @@ export default function TwelveDataRawFactorLab({
                         <dt className="text-slate-500">Scaled-cap difference</dt>
                         <dd className="text-right font-bold text-slate-200">
                           {formatDifference(candidate.scaledRelativeDifference)}
+                        </dd>
+                        <dt className="text-slate-500">
+                          Cap × scale + debt − cash
+                        </dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDiagnosticNumber(
+                            candidate.enterpriseValueFromScaledMarketCap,
+                          )}
+                        </dd>
+                        <dt className="text-slate-500">
+                          Enterprise-value difference
+                        </dt>
+                        <dd className="text-right font-bold text-slate-200">
+                          {formatDifference(
+                            candidate.enterpriseValueRelativeDifference,
+                          )}
                         </dd>
                       </dl>
                     </div>

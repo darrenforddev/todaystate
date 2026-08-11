@@ -228,6 +228,102 @@ const fcfYield = report.pillars.value.factors.find(
 );
 assert.equal(fcfYield?.rawValue, 10);
 
+const enterpriseValueFallbackResults = structuredClone(results);
+const enterpriseValueFallbackStatisticsResult =
+  enterpriseValueFallbackResults.find(
+    (providerResult) => providerResult.dataset === "statistics",
+  );
+const enterpriseValueFallbackIncomeResult = enterpriseValueFallbackResults.find(
+  (providerResult) => providerResult.dataset === "income-statement",
+);
+
+if (
+  !enterpriseValueFallbackStatisticsResult?.payload ||
+  !enterpriseValueFallbackIncomeResult?.payload
+) {
+  throw new Error("Enterprise-value fallback fixture missing.");
+}
+
+const enterpriseValueFallbackStatistics =
+  enterpriseValueFallbackStatisticsResult.payload as {
+    statistics: {
+      valuations_metrics: {
+        market_capitalization: number;
+        enterprise_value: number;
+      };
+    };
+  };
+const enterpriseValueFallbackIncome =
+  enterpriseValueFallbackIncomeResult.payload as {
+    income_statement: Array<{ basic_shares_outstanding?: number }>;
+  };
+
+enterpriseValueFallbackStatistics.statistics.valuations_metrics.market_capitalization =
+  2_000_000;
+enterpriseValueFallbackStatistics.statistics.valuations_metrics.enterprise_value =
+  30_000;
+for (const record of enterpriseValueFallbackIncome.income_statement) {
+  delete record.basic_shares_outstanding;
+}
+
+const enterpriseValueFallbackReport = buildRawTodayScoreReport(
+  company,
+  enterpriseValueFallbackResults,
+  "2026-08-10T12:01:30.000Z",
+);
+const fallbackAltman = enterpriseValueFallbackReport.pillars.quality.factors.find(
+  (factor) => factor.factorId === "altman-z-score",
+);
+const fallbackShareDilution =
+  enterpriseValueFallbackReport.pillars.quality.factors.find(
+    (factor) => factor.factorId === "share-dilution",
+  );
+const fallbackPriceToSales =
+  enterpriseValueFallbackReport.pillars.value.factors.find(
+    (factor) => factor.factorId === "price-to-sales",
+  );
+const fallbackEnterpriseToEbitda =
+  enterpriseValueFallbackReport.pillars.value.factors.find(
+    (factor) => factor.factorId === "enterprise-value-to-ebitda",
+  );
+const fallbackForwardPe = enterpriseValueFallbackReport.pillars.value.factors.find(
+  (factor) => factor.factorId === "forward-price-to-earnings",
+);
+
+assert.equal(
+  enterpriseValueFallbackReport.unitValidation.quoteToFinancialScale,
+  undefined,
+);
+assert.equal(enterpriseValueFallbackReport.unitValidation.marketCapScale, 0.01);
+assert.equal(
+  enterpriseValueFallbackReport.unitValidation.diagnostics.sharesOutstanding,
+  undefined,
+);
+assert.equal(
+  enterpriseValueFallbackReport.unitValidation.diagnostics.candidates.find(
+    (candidate) => candidate.scale === 0.01,
+  )?.selected,
+  true,
+);
+assert.equal(enterpriseValueFallbackReport.unitValidation.rejectedFactorCount, 1);
+assert.equal(
+  enterpriseValueFallbackReport.pillars.quality.availableFactorCount,
+  14,
+);
+assert.equal(enterpriseValueFallbackReport.pillars.value.availableFactorCount, 8);
+assert.equal(
+  enterpriseValueFallbackReport.pillars.momentum.availableFactorCount,
+  10,
+);
+assert.equal(fallbackAltman?.status, "available");
+assert.equal(fallbackShareDilution?.status, "unavailable");
+assert.equal(fallbackPriceToSales?.status, "available");
+assert.equal(fallbackPriceToSales?.rawValue, 0.8333);
+assert.equal(fallbackEnterpriseToEbitda?.status, "available");
+assert.equal(fallbackEnterpriseToEbitda?.rawValue, 6);
+assert.equal(fallbackForwardPe?.status, "rejected");
+assert.match(fallbackForwardPe?.explanation ?? "", /independently recalculated/);
+
 const historicalPe = report.pillars.value.factors.find(
   (factor) => factor.factorId === "pe-versus-five-year-average",
 );

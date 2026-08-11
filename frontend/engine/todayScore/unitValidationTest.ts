@@ -123,6 +123,109 @@ assert.equal(penceInflated.enterpriseValue, 30_000);
 assert.match(penceInflated.marketCapMessage, /multiplied by 0.01/);
 assert.match(penceInflated.enterpriseValueMessage, /replacing its quote-unit/);
 
+const btWithoutShares = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XLON",
+  symbol: "BT.A:LSE",
+  latestClose: 195,
+  reportedMarketCap: 1_921_456_143_750,
+  reportedEnterpriseValue: 39_833_563_136,
+  totalDebt: 22_720_000_000,
+  totalCash: 2_100_999_936,
+});
+
+assert.equal(btWithoutShares.status, "normalised");
+assert.equal(btWithoutShares.quoteToFinancialScale, undefined);
+assert.equal(btWithoutShares.marketCapScale, 0.01);
+assert.equal(btWithoutShares.latestPriceInFinancialCurrency, undefined);
+assert.equal(btWithoutShares.marketCap, 19_214_561_437.5);
+assert.equal(btWithoutShares.enterpriseValue, 39_833_561_501.5);
+assert.match(btWithoutShares.marketCapMessage, /Shares outstanding were unavailable/);
+assert.match(btWithoutShares.marketCapMessage, /multiplied by 0.01/);
+assert.match(btWithoutShares.marketCapMessage, /quote-price scale remains unverified/);
+
+const btPenceCandidate = btWithoutShares.diagnostics.candidates.find(
+  (candidate) => candidate.scale === 0.01,
+);
+const btDeclaredCandidate = btWithoutShares.diagnostics.candidates.find(
+  (candidate) => candidate.scale === 1,
+);
+
+assert.equal(btPenceCandidate?.selected, true);
+assert.equal(btPenceCandidate?.enterpriseValueMatch, true);
+assert.equal(
+  btPenceCandidate?.enterpriseValueFromScaledMarketCap,
+  39_833_561_501.5,
+);
+assert.ok((btPenceCandidate?.enterpriseValueRelativeDifference ?? 1) < 0.000001);
+assert.equal(btDeclaredCandidate?.selected, false);
+assert.equal(btDeclaredCandidate?.enterpriseValueMatch, false);
+
+const nonLondonWithoutShares = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XNYS",
+  symbol: "EXAMPLE",
+  latestClose: 195,
+  reportedMarketCap: 1_921_456_143_750,
+  reportedEnterpriseValue: 39_833_563_136,
+  totalDebt: 22_720_000_000,
+  totalCash: 2_100_999_936,
+});
+
+assert.equal(nonLondonWithoutShares.status, "rejected");
+assert.equal(nonLondonWithoutShares.marketCap, undefined);
+assert.equal(nonLondonWithoutShares.marketCapScale, undefined);
+
+const ambiguousEnterpriseValueIdentity = validateMarketValues({
+  quoteCurrency: "GBP",
+  financialCurrency: "GBP",
+  exchangeMic: "XLON",
+  symbol: "AMBIG:LSE",
+  latestClose: 100,
+  reportedMarketCap: 100,
+  reportedEnterpriseValue: 10_050,
+  totalDebt: 10_000,
+  totalCash: 0,
+});
+
+assert.equal(ambiguousEnterpriseValueIdentity.status, "rejected");
+assert.equal(ambiguousEnterpriseValueIdentity.marketCap, undefined);
+assert.match(ambiguousEnterpriseValueIdentity.marketCapMessage, /ambiguous/);
+assert.equal(
+  ambiguousEnterpriseValueIdentity.diagnostics.candidates.every(
+    (candidate) => candidate.enterpriseValueMatch,
+  ),
+  true,
+);
+
+const contradictorySharesCannotUseEnterpriseValueFallback =
+  validateMarketValues({
+    quoteCurrency: "GBP",
+    financialCurrency: "GBP",
+    exchangeMic: "XLON",
+    symbol: "CONTRADICT:LSE",
+    latestClose: 200,
+    sharesOutstanding: 10_000,
+    reportedMarketCap: 1_000_000,
+    reportedEnterpriseValue: 20_000,
+    totalDebt: 10_000,
+    totalCash: 0,
+  });
+
+assert.equal(contradictorySharesCannotUseEnterpriseValueFallback.status, "rejected");
+assert.equal(
+  contradictorySharesCannotUseEnterpriseValueFallback.marketCap,
+  undefined,
+);
+assert.equal(
+  contradictorySharesCannotUseEnterpriseValueFallback.diagnostics.candidates.find(
+    (candidate) => candidate.scale === 0.01,
+  )?.enterpriseValueMatch,
+  true,
+);
+
 const irreconcilable = validateMarketValues({
   quoteCurrency: "GBX",
   financialCurrency: "GBP",

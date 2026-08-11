@@ -1251,6 +1251,7 @@ export function buildRawTodayScoreReport(
       quoteCurrency: marketValues.quoteCurrency,
       financialCurrency: marketValues.financialCurrency,
       quoteToFinancialScale: marketValues.quoteToFinancialScale,
+      marketCapScale: marketValues.marketCapScale,
       messages: marketValues.messages,
       rejectedFactorCount,
       diagnostics: marketValues.diagnostics,

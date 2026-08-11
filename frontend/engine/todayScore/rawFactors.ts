@@ -21,6 +21,7 @@ export interface RawUnitValidation {
   quoteCurrency?: string;
   financialCurrency?: string;
   quoteToFinancialScale?: number;
+  marketCapScale?: number;
   messages: string[];
   rejectedFactorCount: number;
   diagnostics: MarketValueDiagnostics;

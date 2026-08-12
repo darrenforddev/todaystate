@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TodayScorePortfolioRiskAudit from "./TodayScorePortfolioRiskAudit";
 
 import {
   buildBalancedPortfolioSelection,
@@ -256,6 +257,8 @@ export default function TodayScorePortfolioPanel({
             </div>
           </div>
         </div>
+
+        <TodayScorePortfolioRiskAudit selection={selection} />
 
         {candidateLists.watchCandidates.length > 0 && (
           <div className="mt-8 border-t border-slate-800 pt-8">

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import CompanyLogo from "@/components/company/CompanyLogo";
 import type { TodayScoreTestResult } from "@/engine/todayScore/todayScoreTest";
 import type {
   ScreenerCompanyMetadata,
@@ -36,7 +35,9 @@ function ScoreCell({ value }: { value: number }) {
         ? "text-rose-300"
         : "text-amber-200";
 
-  return <span className={`font-semibold tabular-nums ${colour}`}>{value}</span>;
+  return (
+    <span className={`font-semibold tabular-nums ${colour}`}>{value}</span>
+  );
 }
 
 function RangeFilter({
@@ -86,7 +87,9 @@ export default function TodayScoreScreener({
     [companies, filters],
   );
 
-  const sectors = [...new Set(companies.map((company) => company.sector))].sort();
+  const sectors = [
+    ...new Set(companies.map((company) => company.sector)),
+  ].sort();
   const themes = Array.from(
     new Map(
       companies.map((company) => [
@@ -104,8 +107,8 @@ export default function TodayScoreScreener({
   }
 
   return (
-      <div className="mt-8 grid gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="h-fit rounded-3xl border border-slate-700/70 bg-[#07111f] p-5 xl:sticky xl:top-6">
+    <div className="mt-8 grid gap-6 2xl:grid-cols-[280px_minmax(0,1fr)]">
+      <aside className="h-fit rounded-3xl border border-slate-700/70 bg-[#07111f] p-5 2xl:sticky 2xl:top-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">Research filters</h2>
           <button
@@ -132,8 +135,8 @@ export default function TodayScoreScreener({
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
             Decision
           </p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {(["all", "long", "short"] as const).map((decision) => (
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {(["all", "long", "watch", "short"] as const).map((decision) => (
               <button
                 key={decision}
                 type="button"
@@ -152,7 +155,11 @@ export default function TodayScoreScreener({
 
         <div className="mt-5 grid gap-4">
           {[
-            ["Sector", "sector", sectors.map((sector) => ({ id: sector, name: sector }))],
+            [
+              "Sector",
+              "sector",
+              sectors.map((sector) => ({ id: sector, name: sector })),
+            ],
             ["MBIE theme", "themeId", themes],
           ].map(([label, key, options]) => (
             <label
@@ -179,39 +186,88 @@ export default function TodayScoreScreener({
         </div>
 
         <div className="mt-6 space-y-5 border-t border-slate-800 pt-5">
-          <RangeFilter label="TodayScore" value={filters.minimumTodayScore} onChange={(value) => updateFilter("minimumTodayScore", value)} />
-          <RangeFilter label="Quality" value={filters.minimumQuality} onChange={(value) => updateFilter("minimumQuality", value)} />
-          <RangeFilter label="Value" value={filters.minimumValue} onChange={(value) => updateFilter("minimumValue", value)} />
-          <RangeFilter label="Momentum" value={filters.minimumMomentum} onChange={(value) => updateFilter("minimumMomentum", value)} />
-          <RangeFilter label="Theme confidence" value={filters.minimumThemeConfidence} onChange={(value) => updateFilter("minimumThemeConfidence", value)} />
-          <RangeFilter label="Historical success" value={filters.minimumHistoricalSuccessRate} onChange={(value) => updateFilter("minimumHistoricalSuccessRate", value)} />
+          <RangeFilter
+            label="TodayScore"
+            value={filters.minimumTodayScore}
+            onChange={(value) => updateFilter("minimumTodayScore", value)}
+          />
+          <RangeFilter
+            label="Quality"
+            value={filters.minimumQuality}
+            onChange={(value) => updateFilter("minimumQuality", value)}
+          />
+          <RangeFilter
+            label="Value"
+            value={filters.minimumValue}
+            onChange={(value) => updateFilter("minimumValue", value)}
+          />
+          <RangeFilter
+            label="Momentum"
+            value={filters.minimumMomentum}
+            onChange={(value) => updateFilter("minimumMomentum", value)}
+          />
+          <RangeFilter
+            label="Theme confidence"
+            value={filters.minimumThemeConfidence}
+            onChange={(value) => updateFilter("minimumThemeConfidence", value)}
+          />
+          <RangeFilter
+            label="Historical success"
+            value={filters.minimumHistoricalSuccessRate}
+            onChange={(value) =>
+              updateFilter("minimumHistoricalSuccessRate", value)
+            }
+          />
         </div>
       </aside>
 
       <section className="min-w-0">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-slate-700/70 bg-[#07111f] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Matches</p>
-            <p className="mt-2 text-3xl font-black text-white">{filteredCompanies.length}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Matches
+            </p>
+            <p className="mt-2 text-3xl font-black text-white">
+              {filteredCompanies.length}
+            </p>
           </div>
           <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.06] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-emerald-300/70">Long candidates</p>
-            <p className="mt-2 text-3xl font-black text-emerald-300">{filteredCompanies.filter((company) => company.decision === "long").length}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-emerald-300/70">
+              Long candidates
+            </p>
+            <p className="mt-2 text-3xl font-black text-emerald-300">
+              {
+                filteredCompanies.filter(
+                  (company) => company.decision === "long",
+                ).length
+              }
+            </p>
           </div>
           <div className="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-rose-300/70">Short candidates</p>
-            <p className="mt-2 text-3xl font-black text-rose-300">{filteredCompanies.filter((company) => company.decision === "short").length}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-rose-300/70">
+              Short candidates
+            </p>
+            <p className="mt-2 text-3xl font-black text-rose-300">
+              {
+                filteredCompanies.filter(
+                  (company) => company.decision === "short",
+                ).length
+              }
+            </p>
           </div>
         </div>
 
         <div className="mt-4 overflow-hidden rounded-3xl border border-slate-700/70 bg-[#07111f]">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1050px] text-left text-sm">
+            <table className="w-full min-w-[1120px] text-left text-sm">
               <thead className="border-b border-slate-800 bg-[#0a1626] text-[11px] uppercase tracking-[0.14em] text-slate-500">
                 <tr>
                   <th className="px-5 py-4">Rank / company</th>
                   <th className="px-3 py-4">Decision</th>
-                  <th className="px-3 py-4">TodayScore</th>
+                  <th className="px-2 py-4 text-center">
+                    <span className="block">Today</span>
+                    <span className="block">Score</span>
+                  </th>
                   <th className="px-3 py-4">Quality</th>
                   <th className="px-3 py-4">Value</th>
                   <th className="px-3 py-4">Momentum</th>
@@ -249,52 +305,78 @@ export default function TodayScoreScreener({
                         }
                       }}
                     >
-                    <td className="px-5 py-5">
-                      <div className="flex items-center gap-3">
-                        <span className="w-5 text-xs font-bold text-slate-600">{index + 1}</span>
-                        <CompanyLogo
-                          companyName={company.companyName}
-                          domain={company.brandDomain}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            href={reportHref}
-                            className="font-bold text-white underline-offset-4 hover:text-cyan-200 hover:underline"
+                      <td className="min-w-[190px] px-4 py-5">
+                        <div className="flex items-center gap-3">
+                          <span className="w-5 text-xs font-bold text-slate-600">
+                            {index + 1}
+                          </span>
+
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={reportHref}
+                              className="font-bold text-white underline-offset-4 hover:text-cyan-200 hover:underline"
+                            >
+                              {company.companyName}
+                            </Link>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {company.ticker} · {company.sector} ·{" "}
+                              {company.industry}
+                            </p>
+                            <Link
+                              href={reportHref}
+                              className="mt-2 inline-flex text-xs font-bold text-cyan-300 underline underline-offset-4"
+                            >
+                              View full report
+                            </Link>
+                          </div>
+                          <span
+                            aria-hidden="true"
+                            className="text-lg text-slate-600 transition group-hover:text-cyan-300"
                           >
-                            {company.companyName}
-                          </Link>
-                          <p className="mt-1 text-xs text-slate-500">{company.ticker} · {company.sector} · {company.industry}</p>
-                          <Link
-                            href={reportHref}
-                            className="mt-2 inline-flex text-xs font-bold text-cyan-300 underline underline-offset-4"
-                          >
-                            View full report
-                          </Link>
+                            →
+                          </span>
                         </div>
+                      </td>
+                      <td className="px-3 py-5">
                         <span
-                          aria-hidden="true"
-                          className="text-lg text-slate-600 transition group-hover:text-cyan-300"
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase ${decisionStyles[company.decision]}`}
                         >
-                          →
+                          {company.decision}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-5">
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase ${decisionStyles[company.decision]}`}>{company.decision}</span>
-                    </td>
-                    <td className="px-3 py-5 text-lg"><ScoreCell value={company.result.todayScore.score} /></td>
-                    <td className="px-3 py-5"><ScoreCell value={company.result.todayScore.quality} /></td>
-                    <td className="px-3 py-5"><ScoreCell value={company.result.todayScore.value} /></td>
-                    <td className="px-3 py-5"><ScoreCell value={company.result.todayScore.momentum} /></td>
-                    <td className="px-3 py-5">
-                      <p className="font-medium text-slate-200">{company.themeName}</p>
-                      <p className="mt-1 text-xs text-slate-500">{company.result.classification.band}</p>
-                    </td>
-                    <td className="px-3 py-5 font-semibold text-cyan-300">{company.themeConfidence}%</td>
-                    <td className="px-5 py-5">
-                      <p className="font-semibold text-white">{company.historicalSuccessRate === undefined ? "Not measured" : `${company.historicalSuccessRate}%`}</p>
-                      <p className="mt-1 text-xs text-slate-500">{company.completedOutcomes} completed</p>
-                    </td>
+                      </td>
+                      <td className="px-2 py-5 text-center text-lg">
+                        <ScoreCell value={company.result.todayScore.score} />
+                      </td>
+                      <td className="px-3 py-5">
+                        <ScoreCell value={company.result.todayScore.quality} />
+                      </td>
+                      <td className="px-3 py-5">
+                        <ScoreCell value={company.result.todayScore.value} />
+                      </td>
+                      <td className="px-3 py-5">
+                        <ScoreCell value={company.result.todayScore.momentum} />
+                      </td>
+                      <td className="px-3 py-5">
+                        <p className="font-medium text-slate-200">
+                          {company.themeName}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {company.result.classification.band}
+                        </p>
+                      </td>
+                      <td className="px-3 py-5 font-semibold text-cyan-300">
+                        {company.themeConfidence}%
+                      </td>
+                      <td className="px-5 py-5">
+                        <p className="font-semibold text-white">
+                          {company.historicalSuccessRate === undefined
+                            ? "Not measured"
+                            : `${company.historicalSuccessRate}%`}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {company.completedOutcomes} completed
+                        </p>
+                      </td>
                     </tr>
                   );
                 })}
@@ -304,12 +386,16 @@ export default function TodayScoreScreener({
 
           {filteredCompanies.length === 0 && (
             <div className="px-6 py-16 text-center">
-              <p className="font-semibold text-white">No companies match this research cohort.</p>
-              <p className="mt-2 text-sm text-slate-500">Lower a threshold or reset the filters to widen the universe.</p>
+              <p className="font-semibold text-white">
+                No companies match this research cohort.
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                Lower a threshold or reset the filters to widen the universe.
+              </p>
             </div>
           )}
         </div>
       </section>
-      </div>
+    </div>
   );
 }

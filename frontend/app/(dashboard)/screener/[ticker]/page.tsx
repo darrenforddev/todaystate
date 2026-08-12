@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
 
 import TodayScoreCompanyReport from "@/components/todayScore/TodayScoreCompanyReport";
-import { screenerCompanyMetadata } from "@/data/screenerCompanies";
+import { realCompanyDemoMetadata } from "@/data/realCompanyDemoMetadata";
 import { buildScreenerCompanies } from "@/engine/todayScore/screener";
 import {
   buildScreenerCompanyReport,
   findScreenerCompanyByTicker,
 } from "@/engine/todayScore/screenerReport";
-import { todayScoreTestResults } from "@/engine/todayScore/todayScoreTest";
+import { realCompanyDemoResults } from "@/engine/todayScore/realCompanyDemoScores";
 
 const companies = buildScreenerCompanies(
-  todayScoreTestResults,
-  screenerCompanyMetadata,
+  realCompanyDemoResults,
+  realCompanyDemoMetadata,
 );
 
 export const dynamicParams = false;
@@ -32,15 +32,17 @@ export default async function TodayScoreCompanyPage({
   params,
 }: TodayScoreCompanyPageProps) {
   const { ticker } = await params;
-  const company = findScreenerCompanyByTicker(companies, ticker);
+
+  const company = findScreenerCompanyByTicker(
+    companies,
+    decodeURIComponent(ticker),
+  );
 
   if (!company) {
     notFound();
   }
 
   return (
-    <TodayScoreCompanyReport
-      report={buildScreenerCompanyReport(company)}
-    />
+    <TodayScoreCompanyReport report={buildScreenerCompanyReport(company)} />
   );
 }

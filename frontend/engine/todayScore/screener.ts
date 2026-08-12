@@ -26,7 +26,7 @@ export interface ScreenerCompany extends ScreenerCompanyMetadata {
 
 export interface ScreenerFilters {
   query: string;
-  decision: "all" | "long" | "short";
+  decision: "all" | "long" | "watch" | "short";
   sector: string;
   themeId: string;
   minimumTodayScore: number;
@@ -50,9 +50,18 @@ export const defaultScreenerFilters: ScreenerFilters = {
   minimumHistoricalSuccessRate: 0,
 };
 
-export function getScreenerDecision(score: number): ScreenerDecision {
-  if (score >= 65) return "long";
+export function getScreenerDecision(
+  score: number,
+  classificationBand?: string,
+): ScreenerDecision {
   if (score <= 35) return "short";
+
+  if (classificationBand?.toLowerCase() === "weak") {
+    return "watch";
+  }
+
+  if (score >= 65) return "long";
+
   return "watch";
 }
 
@@ -70,7 +79,10 @@ export function buildScreenerCompanies(
 
       return {
         ...company,
-        decision: getScreenerDecision(result.todayScore.score),
+        decision: getScreenerDecision(
+  result.todayScore.score,
+  result.classification.band,
+),
         result,
       } satisfies ScreenerCompany;
     })

@@ -42,29 +42,56 @@ const demoProfiles = [
 const round = (value: number) =>
   Math.round(value * 100) / 100;
 
-const qualityRows = (
-  calculateValue: (quality: number) => number,
-) =>
-  demoProfiles.map(({ companyId, quality }) => ({
-    companyId,
-    value: round(calculateValue(quality)),
-  }));
+type DemoPillar = "quality" | "value" | "momentum";
 
-const valueRows = (
-  calculateValue: (value: number) => number,
-) =>
-  demoProfiles.map(({ companyId, value }) => ({
-    companyId,
-    value: round(calculateValue(value)),
-  }));
+const factorVariations = [
+  -8,
+  -6,
+  -4,
+  -2,
+  -1,
+  1,
+  2,
+  4,
+  6,
+  8,
+] as const;
 
-const momentumRows = (
-  calculateValue: (momentum: number) => number,
-) =>
-  demoProfiles.map(({ companyId, momentum }) => ({
-    companyId,
-    value: round(calculateValue(momentum)),
-  }));
+const clampDemoProfileScore = (value: number) =>
+  Math.max(0, Math.min(100, value));
+
+const createPillarRows = (pillar: DemoPillar) => {
+  let factorIndex = 0;
+
+  return (
+    calculateValue: (profileScore: number) => number,
+  ) => {
+    const currentFactorIndex = factorIndex;
+    factorIndex += 1;
+
+    return demoProfiles.map((profile, companyIndex) => {
+      const variationIndex =
+        (
+          companyIndex +
+          currentFactorIndex * 3
+        ) % factorVariations.length;
+
+      const variedProfileScore = clampDemoProfileScore(
+        profile[pillar] +
+          factorVariations[variationIndex],
+      );
+
+      return {
+        companyId: profile.companyId,
+        value: round(calculateValue(variedProfileScore)),
+      };
+    });
+  };
+};
+
+const qualityRows = createPillarRows("quality");
+const valueRows = createPillarRows("value");
+const momentumRows = createPillarRows("momentum");
 
 const qualityDemoUniverse: QualityUniverseData = {
   "return-on-invested-capital": qualityRows(

@@ -33,7 +33,6 @@ describe("getScreenerDecision", () => {
     expect(getScreenerDecision(64, "Strong")).toBe("watch");
   });
 });
-
 describe("buildScreenerCompanies", () => {
   const companies = buildScreenerCompanies(
     realCompanyDemoResults,
@@ -44,27 +43,67 @@ describe("buildScreenerCompanies", () => {
     expect(companies).toHaveLength(10);
 
     for (const company of companies) {
-      expect(company.result.companyId).toBe(company.companyId);
+      expect(company.result.companyId).toBe(
+        company.companyId,
+      );
+    }
+  });
+
+  it("gives Tesco varied factor scores within every pillar", () => {
+    const tesco = companies.find(
+      (company) => company.companyId === "tesco",
+    );
+
+    if (!tesco) {
+      throw new Error("Tesco demo company was not found.");
+    }
+
+    const pillars = [
+      tesco.result.breakdown.quality,
+      tesco.result.breakdown.value,
+      tesco.result.breakdown.momentum,
+    ];
+
+    for (const pillar of pillars) {
+      const distinctScores = new Set(
+        pillar.factors.map((factor) => factor.score),
+      );
+
+      expect(distinctScores.size).toBeGreaterThan(1);
     }
   });
 
   it("sorts companies from highest to lowest TodayScore", () => {
-    for (let index = 1; index < companies.length; index += 1) {
+    for (
+      let index = 1;
+      index < companies.length;
+      index += 1
+    ) {
       expect(
         companies[index - 1].result.todayScore.score,
-      ).toBeGreaterThanOrEqual(companies[index].result.todayScore.score);
+      ).toBeGreaterThanOrEqual(
+        companies[index].result.todayScore.score,
+      );
     }
   });
 
   it("assigns the expected decision totals", () => {
-    expect(companies.filter((company) => company.decision === "long")).toHaveLength(
-      0,
-    );
     expect(
-      companies.filter((company) => company.decision === "watch"),
-    ).toHaveLength(8);
+      companies.filter(
+        (company) => company.decision === "long",
+      ),
+    ).toHaveLength(1);
+
     expect(
-      companies.filter((company) => company.decision === "short"),
+      companies.filter(
+        (company) => company.decision === "watch",
+      ),
+    ).toHaveLength(7);
+
+    expect(
+      companies.filter(
+        (company) => company.decision === "short",
+      ),
     ).toHaveLength(2);
   });
 });
@@ -91,8 +130,8 @@ describe("filterScreenerCompanies", () => {
       decision: "short",
     });
 
-    expect(longCompanies).toHaveLength(0);
-    expect(watchCompanies).toHaveLength(8);
+    expect(longCompanies).toHaveLength(1);
+    expect(watchCompanies).toHaveLength(7);
     expect(shortCompanies).toHaveLength(2);
 
     expect(

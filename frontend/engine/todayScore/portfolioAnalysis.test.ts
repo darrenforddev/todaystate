@@ -390,4 +390,125 @@ describe("analysePortfolioSelection", () => {
       "No selected Long/Short positions are available for combined portfolio analysis.",
     );
   });
+   it("excludes invalid company inputs before portfolio calculations", () => {
+    const companyData =
+      buildCompleteCompanyData();
+
+    const invalidCompanyId =
+      companyData[0].companyId;
+
+    companyData[0] = {
+      ...companyData[0],
+      beta: 8,
+    };
+
+    const report =
+      analysePortfolioSelection(
+        buildSelection(),
+        {
+          companyData,
+          dataQualityAsOfDate:
+            "2026-01-08",
+          minimumPriceObservations: 5,
+        },
+      );
+
+    expect(report.status).toBe("limited");
+    expect(report.dataQuality.status).toBe(
+      "invalid",
+    );
+    expect(
+      report.dataQuality.invalidCompanyCount,
+    ).toBe(1);
+
+    expect(
+      report.dataQuality.errors.some(
+        (error) =>
+          error.includes(invalidCompanyId) &&
+          error.includes(
+            "Beta must be finite",
+          ),
+      ),
+    ).toBe(true);
+
+    expect(
+      report.coverage.betaCoveredPositions,
+    ).toBe(1);
+
+    expect(
+      report.coverage.priceCoveredPositions,
+    ).toBe(1);
+  });
+
+  it("excludes duplicated company identifiers from analysis", () => {
+    const companyData =
+      buildCompleteCompanyData();
+
+    const duplicatedCompanyId =
+      companyData[0].companyId;
+
+    companyData.push({
+      ...companyData[0],
+    });
+
+    const report =
+      analysePortfolioSelection(
+        buildSelection(),
+        {
+          companyData,
+          dataQualityAsOfDate:
+            "2026-01-08",
+          minimumPriceObservations: 5,
+        },
+      );
+
+    expect(report.status).toBe("limited");
+    expect(
+      report.dataQuality.duplicateCompanyIds,
+    ).toEqual([duplicatedCompanyId]);
+
+    expect(
+      report.coverage.betaCoveredPositions,
+    ).toBe(1);
+
+    expect(
+      report.warnings.some((warning) =>
+        warning.includes(
+          "data-quality error",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("prevents stale data from receiving a research-ready status", () => {
+    const report =
+      analysePortfolioSelection(
+        buildSelection(),
+        {
+          companyData:
+            buildCompleteCompanyData(),
+          periodsPerYear: 252,
+          dataQualityAsOfDate:
+            "2026-08-13",
+          minimumPriceObservations: 5,
+          maximumPriceAgeDays: 7,
+        },
+      );
+
+    expect(report.dataQuality.status).toBe(
+      "stale",
+    );
+
+    expect(report.status).toBe("limited");
+
+    expect(report.statistics).not.toBeNull();
+
+    expect(
+      report.warnings.some((warning) =>
+        warning.includes(
+          "stale price data",
+        ),
+      ),
+    ).toBe(true);
+  });
 });

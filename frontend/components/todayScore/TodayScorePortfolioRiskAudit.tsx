@@ -1,4 +1,5 @@
 import type { BalancedPortfolioSelection } from "@/engine/todayScore/portfolio";
+import TodayScorePortfolioExposure from "./TodayScorePortfolioExposure";
 import {
   auditPortfolioSelection,
   type PortfolioExposure,
@@ -203,6 +204,8 @@ export default function TodayScorePortfolioRiskAudit({
           </ul>
         </div>
       </div>
+
+      <TodayScorePortfolioExposure selection={selection} />
 
       <p className="mt-5 border-t border-slate-800/80 pt-4 text-[11px] leading-5 text-slate-600">
         {audit.methodology}

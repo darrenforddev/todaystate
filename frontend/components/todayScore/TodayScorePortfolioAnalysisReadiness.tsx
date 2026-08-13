@@ -1,16 +1,23 @@
 import type { BalancedPortfolioSelection } from "@/engine/todayScore/portfolio";
+
+import type { PortfolioPositionDataCoverage } from "@/engine/todayScore/portfolioAnalysis";
+
+import type { PortfolioCompanyMarketDataInput } from "@/engine/todayScore/portfolioMarketData";
+
 import {
-  analysePortfolioSelection,
-  type PortfolioAnalysisStatus,
-  type PortfolioPositionDataCoverage,
-} from "@/engine/todayScore/portfolioAnalysis";
+  runPortfolioAnalysisPipeline,
+  type PortfolioPipelineOptions,
+  type PortfolioPipelineStatus,
+} from "@/engine/todayScore/portfolioPipeline";
 
 interface TodayScorePortfolioAnalysisReadinessProps {
   selection: BalancedPortfolioSelection;
+  providerInputs?: PortfolioCompanyMarketDataInput[];
+  pipelineOptions?: PortfolioPipelineOptions;
 }
 
 const statusStyles: Record<
-  PortfolioAnalysisStatus,
+  PortfolioPipelineStatus,
   {
     label: string;
     border: string;
@@ -196,10 +203,18 @@ function PositionCoverage({
 
 export default function TodayScorePortfolioAnalysisReadiness({
   selection,
+  providerInputs = [],
+  pipelineOptions,
 }: TodayScorePortfolioAnalysisReadinessProps) {
-  const analysis = analysePortfolioSelection(selection);
+  const pipeline = runPortfolioAnalysisPipeline(
+    selection,
+    providerInputs,
+    pipelineOptions,
+  );
+
+  const analysis = pipeline.analysis;
   const coverage = analysis.coverage;
-  const styles = statusStyles[analysis.status];
+  const styles = statusStyles[pipeline.status];
 
   return (
     <section
@@ -227,6 +242,56 @@ export default function TodayScorePortfolioAnalysisReadiness({
         >
           {styles.label}
         </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 rounded-2xl border border-slate-800 bg-slate-950/35 p-4 sm:grid-cols-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            Provider records accepted
+          </p>
+
+          <p className="mt-2 text-lg font-black tabular-nums text-white">
+            {pipeline.coverage.acceptedCompanyCount}/
+            {pipeline.coverage.suppliedCompanyCount}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            Selected positions matched
+          </p>
+
+          <p className="mt-2 text-lg font-black tabular-nums text-white">
+            {pipeline.coverage.matchedPositionCount}/
+            {pipeline.coverage.selectedPositionCount}
+          </p>
+
+          <p className="mt-1 text-[10px] text-slate-600">
+            {pipeline.coverage.matchedPositionPercentage}% provider coverage
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            Adapter status
+          </p>
+
+          <p
+            className={`mt-2 text-sm font-black ${
+              pipeline.marketData.status === "ready"
+                ? "text-emerald-300"
+                : pipeline.marketData.status === "invalid"
+                  ? "text-rose-300"
+                  : "text-amber-300"
+            }`}
+          >
+            {pipeline.marketData.status === "ready"
+              ? "Ready"
+              : pipeline.marketData.status === "invalid"
+                ? "Invalid records blocked"
+                : "Awaiting complete data"}
+          </p>
+        </div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

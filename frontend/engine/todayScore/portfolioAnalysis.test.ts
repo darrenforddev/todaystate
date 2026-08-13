@@ -148,6 +148,9 @@ describe("analysePortfolioSelection", () => {
           companyData:
             buildCompleteCompanyData(),
           periodsPerYear: 252,
+           dataQualityAsOfDate:
+            "2026-01-08",
+          minimumPriceObservations: 5,
         },
       );
 

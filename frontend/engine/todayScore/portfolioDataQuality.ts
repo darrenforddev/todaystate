@@ -97,7 +97,8 @@ function parseDate(value: unknown): number | null {
 function getPriceValue(
   observation: Record<string, unknown>,
 ): number | null {
-  const possibleValue =
+ const possibleValue =
+    observation.price ??
     observation.close ??
     observation.adjustedClose ??
     observation.value;

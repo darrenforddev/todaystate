@@ -29,6 +29,11 @@ import {
   type PortfolioStressReport,
 } from "./portfolioStress";
 
+import {
+  auditPortfolioDataQuality,
+  type PortfolioDataQualityAudit,
+} from "./portfolioDataQuality";
+
 export type PortfolioAnalysisStatus =
   | "not-ready"
   | "limited"
@@ -62,6 +67,10 @@ export interface PortfolioAnalysisOptions {
   defaultHoldingDays?: number;
   maximumParticipationPercentage?: number;
   maximumBorrowFeePercentage?: number;
+    dataQualityAsOfDate?: string;
+  minimumPriceObservations?: number;
+  maximumPriceAgeDays?: number;
+  maximumAbsoluteBeta?: number;
 }
 
 export interface PortfolioPositionDataCoverage {
@@ -100,6 +109,7 @@ export interface PortfolioAnalysisReport {
   statistics: PortfolioStatisticsResult | null;
   stress: PortfolioStressReport;
   implementation: PortfolioImplementationReport;
+   dataQuality: PortfolioDataQualityAudit;
   positionCoverage: PortfolioPositionDataCoverage[];
   coverage: PortfolioAnalysisCoverage;
   warnings: string[];
@@ -181,9 +191,45 @@ export function analysePortfolioSelection(
   selection: BalancedPortfolioSelection,
   options: PortfolioAnalysisOptions = {},
 ): PortfolioAnalysisReport {
+  const suppliedCompanyData =
+    options.companyData ?? [];
+
+  const dataQuality =
+    auditPortfolioDataQuality(
+      suppliedCompanyData,
+      {
+        asOfDate:
+          options.dataQualityAsOfDate,
+        minimumPriceObservations:
+          options.minimumPriceObservations,
+        maximumPriceAgeDays:
+          options.maximumPriceAgeDays,
+        maximumAbsoluteBeta:
+          options.maximumAbsoluteBeta,
+      },
+    );
+
+  const blockedCompanyIds = new Set([
+    ...dataQuality.companyResults
+      .filter(
+        (company) =>
+          company.status === "invalid",
+      )
+      .map((company) => company.companyId),
+    ...dataQuality.duplicateCompanyIds,
+  ]);
+
+  const validatedCompanyData =
+    suppliedCompanyData.filter(
+      (company) =>
+        !blockedCompanyIds.has(
+          company.companyId.trim(),
+        ),
+    );
+
   const companyDataMap =
     buildCompanyDataMap(
-      options.companyData ?? [],
+      validatedCompanyData,
     );
 
   const selectedCandidates = [
@@ -453,6 +499,44 @@ export function analysePortfolioSelection(
 
   const warnings: string[] = [];
   const strengths: string[] = [];
+   if (dataQuality.errors.length > 0) {
+    warnings.push(
+      `${dataQuality.errors.length} portfolio data-quality error${
+        dataQuality.errors.length === 1
+          ? ""
+          : "s"
+      } caused invalid inputs to be excluded from analysis.`,
+    );
+  }
+
+  if (dataQuality.staleCompanyCount > 0) {
+    warnings.push(
+      `${dataQuality.staleCompanyCount} compan${
+        dataQuality.staleCompanyCount === 1
+          ? "y has"
+          : "ies have"
+      } stale price data requiring review.`,
+    );
+  }
+
+  if (
+    suppliedCompanyData.length > 0 &&
+    dataQuality.incompleteCompanyCount > 0
+  ) {
+    warnings.push(
+      `${dataQuality.incompleteCompanyCount} compan${
+        dataQuality.incompleteCompanyCount === 1
+          ? "y has"
+          : "ies have"
+      } incomplete portfolio risk data.`,
+    );
+  }
+
+  if (dataQuality.status === "ready") {
+    strengths.push(
+      "All supplied portfolio inputs pass the configured data-quality gate.",
+    );
+  }
 
   if (exposure.positions.length === 0) {
     warnings.push(
@@ -542,8 +626,10 @@ export function analysePortfolioSelection(
     );
   }
 
-  const isResearchReady =
+ const isResearchReady =
+    dataQuality.status === "ready" &&
     exposure.positions.length > 0 &&
+
     exposure.capital.isCapitalNeutral &&
     exposure.beta.coveragePercentage ===
       100 &&
@@ -566,8 +652,10 @@ export function analysePortfolioSelection(
     historicalBetas,
     statistics,
     stress,
-    implementation,
+     implementation,
+    dataQuality,
     positionCoverage,
+
     coverage: {
       positionCount:
         exposure.positions.length,
@@ -599,7 +687,8 @@ export function analysePortfolioSelection(
     },
     warnings,
     strengths,
-    methodology:
-      "This combined research report resolves supplied or historically calculated beta data, capital exposure, signed portfolio volatility and correlation, market stress estimates, liquidity, transaction costs and Short implementation constraints. Missing inputs remain visible and prevent a research-ready classification. The report is not a trade instruction and does not represent executable broker pricing.",
+
+     methodology:
+      "This combined research report first validates supplied market and implementation data, excluding structurally invalid or duplicated company inputs before calculation. It then resolves supplied or historically calculated beta data, capital exposure, signed portfolio volatility and correlation, market stress estimates, liquidity, transaction costs and Short implementation constraints. Missing or stale inputs remain visible. The report is not a trade instruction and does not represent executable broker pricing.",
   };
 }

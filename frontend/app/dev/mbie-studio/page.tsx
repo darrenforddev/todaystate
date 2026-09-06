@@ -10,6 +10,7 @@ import ReasoningCard from "@/components/mbie/ReasoningCard";
 import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
 import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
+import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
 
 import {
   calculateConfidence,
@@ -89,6 +90,8 @@ export default function MBIEStudioPage() {
           selectedSnapshotIndex={selectedSnapshotIndex}
           onSnapshotChange={setSelectedSnapshotIndex}
         />
+
+        <EconomicFactorChart selectedPeriod={selectedSnapshot.id} />
 
         <div className="mb-8">
           <Pipeline />

@@ -11,6 +11,9 @@ import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
 import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
+import { getTheme } from "@/engine/theme";
+import { getPeriodThemeConviction } from "@/engine/periodTheme";
+import { getAvailableEvidencePeriods } from "@/data/evidenceSnapshots";
 
 import {
   calculateConfidence,
@@ -70,6 +73,16 @@ export default function MBIEStudioPage() {
   const theme = getThemeIntelligence("industrial-recovery");
   const confidence = calculateConfidence(sampleConfidenceFactors);
 
+  const existingThemeResult = getTheme("industrial-recovery");
+
+  const availableEvidencePeriods = getAvailableEvidencePeriods();
+
+  const periodThemeResult = availableEvidencePeriods.includes(
+    selectedSnapshot.id,
+  )
+    ? getPeriodThemeConviction("industrial-recovery", selectedSnapshot.id)
+    : null;
+
   const isLatestSnapshot =
     selectedSnapshotIndex === monthlySnapshots.length - 1;
 
@@ -92,6 +105,70 @@ export default function MBIEStudioPage() {
         />
 
         <EconomicFactorChart selectedPeriod={selectedSnapshot.id} />
+
+        <section className="mb-8 rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-6">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">
+              Engine Migration Check
+            </p>
+
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Existing vs Period-Aware Conviction
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              This temporary comparison confirms that the new historical engine
+              reproduces the existing calculation before it becomes
+              authoritative.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-[#091727] p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Existing July Engine
+              </p>
+
+              <p className="mt-3 text-4xl font-black text-white">
+                {existingThemeResult.conviction}
+              </p>
+
+              <p className="mt-2 text-sm text-slate-400">
+                Dated relationships currently used by TodayState
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                Period-Aware Engine
+              </p>
+
+              {periodThemeResult ? (
+                <>
+                  <p className="mt-3 text-4xl font-black text-cyan-300">
+                    {periodThemeResult.score}
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-400">
+                    {periodThemeResult.reportPeriod} snapshot using permanent
+                    indicator relationships
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-3 text-2xl font-black text-amber-300">
+                    Pending archive
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-400">
+                    The complete source evidence for {selectedSnapshot.label}{" "}
+                    has not yet been loaded.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
 
         <div className="mb-8">
           <Pipeline />

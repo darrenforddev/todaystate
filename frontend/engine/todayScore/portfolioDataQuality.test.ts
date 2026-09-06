@@ -18,7 +18,7 @@ function buildPriceHistory(
       )
         .toISOString()
         .slice(0, 10),
-      close: 100 + index,
+      price: 100 + index,
     }),
   );
 }
@@ -84,7 +84,7 @@ describe("auditPortfolioDataQuality", () => {
       prices: [
         {
           date: "not-a-date",
-          close: -10,
+          price: -10,
         },
       ],
       beta: 8,

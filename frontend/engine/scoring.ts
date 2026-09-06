@@ -1,4 +1,7 @@
-import { relationships } from "./relationships";
+import {
+  relationships,
+  type Relationship,
+} from "./relationships";
 
 type ScoringTarget = "theme" | "company";
 
@@ -34,8 +37,9 @@ function clampScore(score: number): number {
 function getScoringSignals(
   targetType: ScoringTarget,
   targetId: string,
+  relationshipSource: Relationship[],
 ): ScoringSignal[] {
-  return relationships.flatMap((relationship) => {
+  return relationshipSource.flatMap((relationship) => {
     if (
       relationship.targetType !== targetType ||
       relationship.targetId !== targetId
@@ -186,10 +190,12 @@ function calculateScoreFromSignals(
 export function getRelationshipScoreBreakdown(
   targetType: ScoringTarget,
   targetId: string,
+  relationshipSource: Relationship[] = relationships,
 ): RelationshipScoreBreakdown {
   const rawSignals = getScoringSignals(
     targetType,
     targetId,
+    relationshipSource,
   ).filter(
     (signal) => signal.direction !== 0,
   );
@@ -256,10 +262,12 @@ export function getRelationshipScoreBreakdown(
 export function calculateRelationshipScore(
   targetType: ScoringTarget,
   targetId: string,
+  relationshipSource: Relationship[] = relationships,
 ): number {
   return getRelationshipScoreBreakdown(
     targetType,
     targetId,
+    relationshipSource,
   ).score;
 }
 

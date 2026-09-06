@@ -41,6 +41,19 @@ export const indicatorRules: Record<string, IndicatorRule> = {
     impactBelow: "negative",
   },
 
+  "services-employment": {
+    assessmentMode: "threshold",
+    threshold: 50,
+
+    higherIsBetter: true,
+
+    statusAbove: "expansion",
+    statusBelow: "contraction",
+
+    impactAbove: "positive",
+    impactBelow: "negative",
+  },
+
   "nonfarm-payrolls": {
     assessmentMode: "change",
     threshold: 0,

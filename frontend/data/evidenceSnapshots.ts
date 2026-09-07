@@ -6,10 +6,49 @@ import {
 /**
  * Permanent point-in-time economic evidence archive.
  *
- * This initially runs alongside the existing live evidence array.
- * Existing consumers will not use it until period filtering is ready.
+ * Current usage scope: private, non-commercial research.
+ *
+ * Each snapshot preserves what TodayState knew for a particular
+ * reporting month. Existing consumers can select a reporting period
+ * without changing or overwriting earlier evidence.
  */
 export const evidenceSnapshots: EvidenceSnapshot[] = [
+  {
+    id: "ism-manufacturing-pmi-2026-06",
+    indicatorKey: "ism-manufacturing-pmi",
+    reportPeriod: "2026-06",
+    observedAt: "2026-07-01",
+    evidence: buildEvidence(
+      "manufacturing-pmi",
+      53.3,
+      54.0,
+    ),
+  },
+
+  {
+    id: "ism-services-pmi-2026-06",
+    indicatorKey: "ism-services-pmi",
+    reportPeriod: "2026-06",
+    observedAt: "2026-07-06",
+    evidence: buildEvidence(
+      "services-pmi",
+      54.0,
+      54.5,
+    ),
+  },
+
+  {
+    id: "ism-services-employment-2026-06",
+    indicatorKey: "ism-services-employment",
+    reportPeriod: "2026-06",
+    observedAt: "2026-07-06",
+    evidence: buildEvidence(
+      "services-employment",
+      51.2,
+      47.9,
+    ),
+  },
+
   {
     id: "ism-manufacturing-pmi-2026-07",
     indicatorKey: "ism-manufacturing-pmi",

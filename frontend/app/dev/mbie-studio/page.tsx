@@ -11,6 +11,7 @@ import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
 import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
+import EconomicTrendAnalysisCard from "@/components/mbie/EconomicTrendAnalysisCard";
 import PeriodIntelligenceSummary from "@/components/mbie/PeriodIntelligenceSummary";
 import CompactTimeLens from "@/components/mbie/CompactTimeLens";
 
@@ -27,6 +28,7 @@ import {
 } from "@/engine/confidence/index";
 
 import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
+import { getEconomicTrendAnalysis } from "@/engine/economicTrendAnalysis";
 import { getThemeIntelligence } from "@/engine/themeEngine";
 
 interface MonthlySnapshot {
@@ -98,6 +100,9 @@ export default function MBIEStudioPage() {
   const confidence =
     periodThemeResult?.confidence ??
     calculateConfidence(sampleConfidenceFactors);
+  const trendAnalysis = selectedPeriod
+    ? getEconomicTrendAnalysis(selectedPeriod)
+    : null;
 
   const monthLabels = monthlySnapshots.map((snapshot) => snapshot.label);
 
@@ -123,6 +128,7 @@ export default function MBIEStudioPage() {
         />
 
         <EconomicFactorChart selectedPeriod={selectedSnapshot.id} />
+        <EconomicTrendAnalysisCard result={trendAnalysis} />
 
         <PeriodIntelligenceSummary
           result={periodThemeResult}

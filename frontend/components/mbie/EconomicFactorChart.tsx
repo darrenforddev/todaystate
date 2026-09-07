@@ -63,6 +63,29 @@ interface FactorDefinition {
 
 const economicHistory: EconomicHistoryPoint[] = [
   {
+    period: "2026-05",
+    month: "May",
+
+    manufacturingPmi: 54.0,
+    servicesPmi: 54.5,
+
+    manufacturingNewOrders: 56.8,
+    servicesNewOrders: 57.3,
+
+    manufacturingOutput: 54.3,
+    servicesOutput: 57.7,
+
+    manufacturingEmployment: 48.6,
+    servicesEmployment: 47.9,
+
+    manufacturingPrices: 82.1,
+    servicesPrices: 71.3,
+
+    manufacturingBacklogs: 52.2,
+    servicesBacklogs: 51.3,
+  },
+
+  {
     period: "2026-06",
     month: "June",
 

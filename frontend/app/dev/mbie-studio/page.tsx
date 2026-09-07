@@ -12,6 +12,7 @@ import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
 import PeriodIntelligenceSummary from "@/components/mbie/PeriodIntelligenceSummary";
+import CompactTimeLens from "@/components/mbie/CompactTimeLens";
 
 import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
 import { getAvailableEvidencePeriods } from "@/data/evidenceSnapshots";
@@ -33,6 +34,13 @@ interface MonthlySnapshot {
 }
 
 const monthlySnapshots: MonthlySnapshot[] = [
+  {
+    id: "2026-05",
+    label: "May 2026",
+    comparedWith: "April 2026",
+    current: 54.0,
+    previous: 53.5,
+  },
   {
     id: "2026-06",
     label: "June 2026",
@@ -64,6 +72,7 @@ export default function MBIEStudioPage() {
   const selectedSnapshot =
     monthlySnapshots[selectedSnapshotIndex] ??
     monthlySnapshots[monthlySnapshots.length - 1];
+  const monthLabels = monthlySnapshots.map((snapshot) => snapshot.label);
 
   const evidence = buildEvidence(
     "manufacturing-pmi",
@@ -126,6 +135,12 @@ export default function MBIEStudioPage() {
           />
         </div>
 
+        <CompactTimeLens
+          monthLabels={monthLabels}
+          selectedIndex={selectedSnapshotIndex}
+          onChange={setSelectedSnapshotIndex}
+        />
+
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
             <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -154,6 +169,14 @@ export default function MBIEStudioPage() {
             name={theme.theme.name}
             description={theme.theme.description}
             strength={theme.averageRelationshipStrength}
+          />
+        </div>
+
+        <div className="mt-8">
+          <CompactTimeLens
+            monthLabels={monthLabels}
+            selectedIndex={selectedSnapshotIndex}
+            onChange={setSelectedSnapshotIndex}
           />
         </div>
 
@@ -251,7 +274,7 @@ function TimeLens({
           className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 accent-cyan-400"
         />
 
-        <div className="mt-4 grid grid-cols-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+        <div className="mt-4 grid grid-cols-4 text-xs font-bold uppercase tracking-wider text-slate-500">
           {monthlySnapshots.map((snapshot, index) => (
             <button
               key={snapshot.id}

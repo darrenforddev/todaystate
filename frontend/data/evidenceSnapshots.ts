@@ -24,7 +24,42 @@ export const evidenceSnapshots: EvidenceSnapshot[] = [
       54.0,
     ),
   },
+  {
+    id: "ism-manufacturing-pmi-2026-05",
+    indicatorKey: "ism-manufacturing-pmi",
+    reportPeriod: "2026-05",
+    observedAt: "2026-06-01",
+    evidence: buildEvidence(
+      "manufacturing-pmi",
+      54.0,
+      53.5,
+    ),
+  },
 
+  {
+    id: "ism-services-pmi-2026-05",
+    indicatorKey: "ism-services-pmi",
+    reportPeriod: "2026-05",
+    observedAt: "2026-06-03",
+    evidence: buildEvidence(
+      "services-pmi",
+      54.5,
+      53.6,
+    ),
+  },
+
+  {
+    id: "ism-services-employment-2026-05",
+    indicatorKey: "ism-services-employment",
+    reportPeriod: "2026-05",
+    observedAt: "2026-06-03",
+    evidence: buildEvidence(
+      "services-employment",
+      47.9,
+      48.0,
+    ),
+  },
+  
   {
     id: "ism-services-pmi-2026-06",
     indicatorKey: "ism-services-pmi",

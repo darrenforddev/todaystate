@@ -11,7 +11,12 @@ import type {
 import { assessTwelveDataResponse } from "./twelveDataResponse";
 
 const TWELVE_DATA_BASE_URL = "https://api.twelvedata.com";
-const TWELVE_DATA_EXCHANGE = "LSE";
+const TWELVE_DATA_EXCHANGE_BY_MIC: Record<string, string> = {
+  XLON: "LSE",
+  XNAS: "NASDAQ",
+  XNYS: "NYSE",
+  ARCX: "NYSE",
+};
 const REQUEST_TIMEOUT_MS = 15_000;
 
 const endpointByDataset: Record<TodayScoreDataset, string> = {
@@ -31,6 +36,21 @@ export const twelveDataLseTrialCompany: ProviderCompanyIdentity = {
   exchangeMic: "XLON",
 };
 
+function getTwelveDataExchange(
+  company: ProviderCompanyIdentity,
+): string {
+  const exchangeMic =
+    company.exchangeMic
+      .trim()
+      .toUpperCase();
+
+  return (
+    TWELVE_DATA_EXCHANGE_BY_MIC[
+      exchangeMic
+    ] ?? exchangeMic
+  );
+}
+
 function buildDatasetUrl(
   company: ProviderCompanyIdentity,
   dataset: TodayScoreDataset,
@@ -40,7 +60,10 @@ function buildDatasetUrl(
   const url = new URL(endpoint, `${TWELVE_DATA_BASE_URL}/`);
 
   url.searchParams.set("symbol", company.ticker);
-  url.searchParams.set("exchange", TWELVE_DATA_EXCHANGE);
+    url.searchParams.set(
+    "exchange",
+    getTwelveDataExchange(company),
+  );
 
   if (dataset === "price-history") {
     url.searchParams.set("interval", "1day");
@@ -119,7 +142,7 @@ export class TwelveDataProvider implements FinancialDataProvider {
         providerName: this.name,
         companyId: company.companyId,
         companyName: company.companyName,
-        symbol: `${company.ticker}:${TWELVE_DATA_EXCHANGE}`,
+        symbol: `${company.ticker}:${getTwelveDataExchange(company)}`,
         dataset,
         endpoint: `/${endpoint}`,
         ...assessment,
@@ -135,7 +158,7 @@ export class TwelveDataProvider implements FinancialDataProvider {
         providerName: this.name,
         companyId: company.companyId,
         companyName: company.companyName,
-        symbol: `${company.ticker}:${TWELVE_DATA_EXCHANGE}`,
+        symbol: `${company.ticker}:${getTwelveDataExchange(company)}`,
         dataset,
         endpoint: `/${endpoint}`,
         status: "provider-error",

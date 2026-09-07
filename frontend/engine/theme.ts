@@ -44,6 +44,15 @@ export interface ThemeConviction {
   breakdown: RelationshipScoreBreakdown;
 }
 
+export type ThemeSignalLabel =
+  | "Strong Positive"
+  | "Positive"
+  | "Cautiously Positive"
+  | "Neutral"
+  | "Cautiously Negative"
+  | "Negative"
+  | "Strong Negative";
+
 export interface ThemeIntelligence {
   id: string;
   name: string;
@@ -51,7 +60,7 @@ export interface ThemeIntelligence {
   convictionDetails: ThemeConviction;
   confidence: number;
   confidenceDetails: ThemeConfidence;
-  signal: string;
+  signal: ThemeSignalLabel;
   narrative: string;
   evidence: ThemeEvidence[];
   reasoning: string[];
@@ -88,9 +97,9 @@ function getThemeConfidenceEvidence(
   });
 }
 
-function getThemeSignal(
+export function getThemeSignal(
   conviction: number,
-): string {
+): ThemeSignalLabel {
   if (conviction >= 90) {
     return "Strong Positive";
   }

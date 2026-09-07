@@ -31,12 +31,12 @@ export interface ApprovedSelectionInput {
   risks: string[];
 }
 
-interface HorizonDefinition {
+export interface HorizonDefinition {
   horizon: OutcomeHorizon;
   months: number;
 }
 
-const HORIZON_DEFINITIONS: HorizonDefinition[] = [
+export const HORIZON_DEFINITIONS: HorizonDefinition[] = [
   {
     horizon: "one-month",
     months: 1,
@@ -84,7 +84,7 @@ function parseDateOnly(value: string): Date {
   return date;
 }
 
-function addCalendarMonths(
+export function addCalendarMonths(
   dateValue: string,
   months: number,
 ): string {

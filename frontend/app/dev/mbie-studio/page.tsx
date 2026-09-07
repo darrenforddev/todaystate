@@ -12,6 +12,7 @@ import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
 import EconomicTrendAnalysisCard from "@/components/mbie/EconomicTrendAnalysisCard";
+import SignalValidationCard from "@/components/mbie/SignalValidationCard";
 import PeriodIntelligenceSummary from "@/components/mbie/PeriodIntelligenceSummary";
 import CompactTimeLens from "@/components/mbie/CompactTimeLens";
 
@@ -129,6 +130,10 @@ export default function MBIEStudioPage() {
 
         <EconomicFactorChart selectedPeriod={selectedSnapshot.id} />
         <EconomicTrendAnalysisCard result={trendAnalysis} />
+
+        <div className="mb-8">
+          <SignalValidationCard />
+        </div>
 
         <PeriodIntelligenceSummary
           result={periodThemeResult}

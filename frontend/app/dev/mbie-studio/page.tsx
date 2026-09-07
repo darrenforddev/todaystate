@@ -35,6 +35,13 @@ interface MonthlySnapshot {
 
 const monthlySnapshots: MonthlySnapshot[] = [
   {
+    id: "2026-04",
+    label: "April 2026",
+    comparedWith: "March 2026",
+    current: 52.7,
+    previous: 52.7,
+  },
+  {
     id: "2026-05",
     label: "May 2026",
     comparedWith: "April 2026",
@@ -274,7 +281,7 @@ function TimeLens({
           className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 accent-cyan-400"
         />
 
-        <div className="mt-4 grid grid-cols-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+        <div className="mt-4 grid grid-cols-5 text-xs font-bold uppercase tracking-wider text-slate-500">
           {monthlySnapshots.map((snapshot, index) => (
             <button
               key={snapshot.id}

@@ -13,6 +13,14 @@ export type Impact =
   | "negative"
   | "neutral";
 
+export type EvidenceDataVintage =
+  | "first-release"
+  | "revised";
+
+export type EvidenceUsageScope =
+  | "private-research"
+  | "licensed";
+
 export interface Evidence {
   indicatorId: string;
 
@@ -35,8 +43,8 @@ export interface Evidence {
  * A permanent point-in-time record of an Evidence Engine result.
  *
  * Evidence remains the calculated interpretation.
- * EvidenceSnapshot adds the identity and dates required for
- * historical storage, Time Lens navigation and auditing.
+ * EvidenceSnapshot adds the identity, provenance and dates required
+ * for historical storage, Time Lens navigation and auditing.
  */
 export interface EvidenceSnapshot {
   /**
@@ -62,6 +70,22 @@ export interface EvidenceSnapshot {
    * Stored as an ISO YYYY-MM-DD date.
    */
   observedAt: string;
+
+  /**
+   * Whether the figures represent the original publication or
+   * a subsequently revised historical series.
+   */
+  dataVintage?: EvidenceDataVintage;
+
+  /**
+   * Original source page used to verify this release.
+   */
+  sourceUrl?: string;
+
+  /**
+   * Current permitted use of the source data.
+   */
+  usageScope?: EvidenceUsageScope;
 
   /**
    * The Evidence Engine result calculated from that release.

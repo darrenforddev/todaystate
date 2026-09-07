@@ -14,69 +14,57 @@ import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
 import PeriodIntelligenceSummary from "@/components/mbie/PeriodIntelligenceSummary";
 import CompactTimeLens from "@/components/mbie/CompactTimeLens";
 
-import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
-import { getAvailableEvidencePeriods } from "@/data/evidenceSnapshots";
+import { economicHistory, formatEconomicPeriod } from "@/data/economicHistory";
+
+import {
+  getAvailableEvidencePeriods,
+  getEvidenceSnapshotsForPeriod,
+} from "@/data/evidenceSnapshots";
 
 import {
   calculateConfidence,
   sampleConfidenceFactors,
 } from "@/engine/confidence/index";
 
-import { buildEvidence } from "@/engine/evidence";
+import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
 import { getThemeIntelligence } from "@/engine/themeEngine";
 
 interface MonthlySnapshot {
   id: string;
   label: string;
   comparedWith: string;
-  current: number;
-  previous: number;
 }
 
-const monthlySnapshots: MonthlySnapshot[] = [
-  {
-    id: "2026-03",
-    label: "March 2026",
-    comparedWith: "February 2026",
-    current: 52.7,
-    previous: 52.4,
-  },
-  {
-    id: "2026-04",
-    label: "April 2026",
-    comparedWith: "March 2026",
-    current: 52.7,
-    previous: 52.7,
-  },
-  {
-    id: "2026-05",
-    label: "May 2026",
-    comparedWith: "April 2026",
-    current: 54.0,
-    previous: 53.5,
-  },
-  {
-    id: "2026-06",
-    label: "June 2026",
-    comparedWith: "May 2026",
-    current: 53.3,
-    previous: 54.0,
-  },
-  {
-    id: "2026-07",
-    label: "July 2026",
-    comparedWith: "June 2026",
-    current: 55.6,
-    previous: 53.3,
-  },
-  {
-    id: "2026-08",
-    label: "August 2026",
-    comparedWith: "July 2026",
-    current: 54.6,
-    previous: 55.6,
-  },
-];
+function getPreviousPeriodLabel(reportPeriod: string): string {
+  const [yearText, monthText] = reportPeriod.split("-");
+
+  const year = Number(yearText);
+  const month = Number(monthText);
+
+  const previousDate = new Date(Date.UTC(year, month - 2, 1));
+
+  return previousDate.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function getShortPeriodLabel(snapshot: MonthlySnapshot, index: number): string {
+  const [month, year] = snapshot.label.split(" ");
+
+  if (index === 0 || month === "January") {
+    return `${month.slice(0, 3)} '${year.slice(-2)}`;
+  }
+
+  return month.slice(0, 3);
+}
+
+const monthlySnapshots: MonthlySnapshot[] = economicHistory.map((point) => ({
+  id: point.period,
+  label: formatEconomicPeriod(point.period),
+  comparedWith: getPreviousPeriodLabel(point.period),
+}));
 
 export default function MBIEStudioPage() {
   const [selectedSnapshotIndex, setSelectedSnapshotIndex] = useState(
@@ -86,35 +74,40 @@ export default function MBIEStudioPage() {
   const selectedSnapshot =
     monthlySnapshots[selectedSnapshotIndex] ??
     monthlySnapshots[monthlySnapshots.length - 1];
-  const monthLabels = monthlySnapshots.map((snapshot) => snapshot.label);
 
-  const evidence = buildEvidence(
-    "manufacturing-pmi",
-    selectedSnapshot.current,
-    selectedSnapshot.previous,
+  const selectedPeriod = selectedSnapshot?.id ?? "";
+
+  const selectedEvidence = selectedPeriod
+    ? getEvidenceSnapshotsForPeriod(selectedPeriod)
+    : [];
+
+  const manufacturingSnapshot = selectedEvidence.find(
+    (snapshot) => snapshot.indicatorKey === "ism-manufacturing-pmi",
   );
+
+  const evidence = manufacturingSnapshot?.evidence;
 
   const theme = getThemeIntelligence("industrial-recovery");
 
   const availableEvidencePeriods = getAvailableEvidencePeriods();
 
-  const periodThemeResult = availableEvidencePeriods.includes(
-    selectedSnapshot.id,
-  )
-    ? getPeriodThemeIntelligence("industrial-recovery", selectedSnapshot.id)
+  const periodThemeResult = availableEvidencePeriods.includes(selectedPeriod)
+    ? getPeriodThemeIntelligence("industrial-recovery", selectedPeriod)
     : null;
 
   const confidence =
     periodThemeResult?.confidence ??
     calculateConfidence(sampleConfidenceFactors);
 
+  const monthLabels = monthlySnapshots.map((snapshot) => snapshot.label);
+
   const isLatestSnapshot =
     selectedSnapshotIndex === monthlySnapshots.length - 1;
 
-  if (!theme) {
+  if (!theme || !selectedSnapshot || !evidence) {
     return (
       <main className="min-h-screen bg-slate-950 p-8 text-white">
-        Theme intelligence could not be loaded.
+        MBIE intelligence could not be loaded.
       </main>
     );
   }
@@ -241,6 +234,10 @@ function TimeLens({
   const isLatestSnapshot =
     selectedSnapshotIndex === monthlySnapshots.length - 1;
 
+  if (!selectedSnapshot) {
+    return null;
+  }
+
   return (
     <section className="mb-8 rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-6">
       <div className="flex flex-wrap items-start justify-between gap-5">
@@ -288,25 +285,19 @@ function TimeLens({
           className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-700 accent-cyan-400"
         />
 
-        <div className="mt-4 grid grid-cols-6 text-xs font-bold uppercase tracking-wider text-slate-500">
+        <div className="mt-4 grid grid-cols-12 gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
           {monthlySnapshots.map((snapshot, index) => (
             <button
               key={snapshot.id}
               type="button"
               onClick={() => onSnapshotChange(index)}
-              className={`min-h-11 ${
-                index === 0
-                  ? "text-left"
-                  : index === monthlySnapshots.length - 1
-                    ? "text-right"
-                    : "text-center"
-              } ${
+              className={`min-h-11 text-center ${
                 index === selectedSnapshotIndex
                   ? "text-cyan-300"
                   : "transition hover:text-slate-300"
               }`}
             >
-              {snapshot.label.replace(" 2026", "")}
+              {getShortPeriodLabel(snapshot, index)}
             </button>
           ))}
         </div>

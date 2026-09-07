@@ -14,6 +14,12 @@ import {
   YAxis,
 } from "recharts";
 
+import {
+  economicHistory,
+  formatEconomicPeriod,
+  type EconomicHistoryPoint,
+} from "@/data/economicHistory";
+
 interface EconomicFactorChartProps {
   selectedPeriod: string;
 }
@@ -26,29 +32,6 @@ type FactorKey =
   | "prices"
   | "backlogs";
 
-interface EconomicHistoryPoint {
-  period: string;
-  month: string;
-
-  manufacturingPmi: number;
-  servicesPmi: number;
-
-  manufacturingNewOrders: number;
-  servicesNewOrders: number;
-
-  manufacturingOutput: number;
-  servicesOutput: number;
-
-  manufacturingEmployment: number;
-  servicesEmployment: number;
-
-  manufacturingPrices: number;
-  servicesPrices: number;
-
-  manufacturingBacklogs: number;
-  servicesBacklogs: number;
-}
-
 interface FactorDefinition {
   label: string;
   title: string;
@@ -60,142 +43,6 @@ interface FactorDefinition {
   boundaryLabel: string;
   footer: string;
 }
-
-const economicHistory: EconomicHistoryPoint[] = [
-  {
-    period: "2026-03",
-    month: "March",
-
-    manufacturingPmi: 52.7,
-    servicesPmi: 54.0,
-
-    manufacturingNewOrders: 53.5,
-    servicesNewOrders: 60.6,
-
-    manufacturingOutput: 55.1,
-    servicesOutput: 53.9,
-
-    manufacturingEmployment: 48.7,
-    servicesEmployment: 45.2,
-
-    manufacturingPrices: 78.3,
-    servicesPrices: 70.7,
-
-    manufacturingBacklogs: 54.4,
-    servicesBacklogs: 53.6,
-  },
-  {
-    period: "2026-04",
-    month: "April",
-
-    manufacturingPmi: 52.7,
-    servicesPmi: 53.6,
-
-    manufacturingNewOrders: 54.1,
-    servicesNewOrders: 53.5,
-
-    manufacturingOutput: 53.4,
-    servicesOutput: 55.9,
-
-    manufacturingEmployment: 46.4,
-    servicesEmployment: 48.0,
-
-    manufacturingPrices: 84.6,
-    servicesPrices: 70.7,
-
-    manufacturingBacklogs: 51.4,
-    servicesBacklogs: 53.0,
-  },
-  {
-    period: "2026-05",
-    month: "May",
-
-    manufacturingPmi: 54.0,
-    servicesPmi: 54.5,
-
-    manufacturingNewOrders: 56.8,
-    servicesNewOrders: 57.3,
-
-    manufacturingOutput: 54.3,
-    servicesOutput: 57.7,
-
-    manufacturingEmployment: 48.6,
-    servicesEmployment: 47.9,
-
-    manufacturingPrices: 82.1,
-    servicesPrices: 71.3,
-
-    manufacturingBacklogs: 52.2,
-    servicesBacklogs: 51.3,
-  },
-
-  {
-    period: "2026-06",
-    month: "June",
-
-    manufacturingPmi: 53.3,
-    servicesPmi: 54.0,
-
-    manufacturingNewOrders: 56.0,
-    servicesNewOrders: 55.1,
-
-    manufacturingOutput: 52.2,
-    servicesOutput: 55.4,
-
-    manufacturingEmployment: 49.7,
-    servicesEmployment: 51.2,
-
-    manufacturingPrices: 73.0,
-    servicesPrices: 67.7,
-
-    manufacturingBacklogs: 50.5,
-    servicesBacklogs: 54.9,
-  },
-  {
-    period: "2026-07",
-    month: "July",
-
-    manufacturingPmi: 55.6,
-    servicesPmi: 54.1,
-
-    manufacturingNewOrders: 56.7,
-    servicesNewOrders: 57.2,
-
-    manufacturingOutput: 58.5,
-    servicesOutput: 59.1,
-
-    manufacturingEmployment: 52.8,
-    servicesEmployment: 47.4,
-
-    manufacturingPrices: 71.1,
-    servicesPrices: 70.3,
-
-    manufacturingBacklogs: 55.0,
-    servicesBacklogs: 50.9,
-  },
-  {
-    period: "2026-08",
-    month: "August",
-
-    manufacturingPmi: 54.6,
-    servicesPmi: 55.4,
-
-    manufacturingNewOrders: 53.7,
-    servicesNewOrders: 60.9,
-
-    manufacturingOutput: 58.3,
-    servicesOutput: 61.7,
-
-    manufacturingEmployment: 51.2,
-    servicesEmployment: 47.8,
-
-    manufacturingPrices: 71.1,
-    servicesPrices: 72.6,
-
-    manufacturingBacklogs: 51.8,
-    servicesBacklogs: 55.6,
-  },
-];
 
 const factorDefinitions: Record<FactorKey, FactorDefinition> = {
   pmi: {
@@ -299,9 +146,15 @@ export default function EconomicFactorChart({
 
   const definition = factorDefinitions[selectedFactor];
 
-  const selectedMonth =
-    economicHistory.find((item) => item.period === selectedPeriod)?.month ??
-    "August";
+  const selectedPoint =
+    economicHistory.find((item) => item.period === selectedPeriod) ??
+    economicHistory[economicHistory.length - 1];
+
+  const selectedMonth = selectedPoint?.month ?? "August";
+
+  const selectedPeriodLabel = selectedPoint
+    ? formatEconomicPeriod(selectedPoint.period)
+    : "August 2026";
 
   const chartData = useMemo(
     () =>
@@ -322,6 +175,7 @@ export default function EconomicFactorChart({
     ]);
 
     const minimum = Math.floor(Math.min(...values) - 3);
+
     const maximum = Math.ceil(Math.max(...values) + 3);
 
     return [minimum, maximum] as [number, number];
@@ -349,13 +203,14 @@ export default function EconomicFactorChart({
             Selected month
           </p>
 
-          <p className="mt-1 font-black text-cyan-300">{selectedMonth} 2026</p>
+          <p className="mt-1 font-black text-cyan-300">{selectedPeriodLabel}</p>
         </div>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {factorOrder.map((factor) => {
           const factorDefinition = factorDefinitions[factor];
+
           const isSelected = factor === selectedFactor;
 
           return (
@@ -397,12 +252,14 @@ export default function EconomicFactorChart({
               stroke="#64748b"
               tick={{
                 fill: "#94a3b8",
-                fontSize: 12,
+                fontSize: 11,
               }}
+              tickFormatter={(month) => String(month).slice(0, 3)}
               tickLine={false}
               axisLine={{
                 stroke: "#334155",
               }}
+              interval={0}
             />
 
             <YAxis
@@ -471,10 +328,10 @@ export default function EconomicFactorChart({
               stroke="#22d3ee"
               strokeWidth={3}
               dot={{
-                r: 5,
+                r: 4,
                 fill: "#020817",
                 stroke: "#22d3ee",
-                strokeWidth: 3,
+                strokeWidth: 2,
               }}
               activeDot={{
                 r: 7,
@@ -491,10 +348,10 @@ export default function EconomicFactorChart({
               stroke="#a78bfa"
               strokeWidth={3}
               dot={{
-                r: 5,
+                r: 4,
                 fill: "#020817",
                 stroke: "#a78bfa",
-                strokeWidth: 3,
+                strokeWidth: 2,
               }}
               activeDot={{
                 r: 7,

@@ -11,6 +11,7 @@ import TodaysIntelligence from "@/components/mbie/TodaysIntelligence";
 import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
+import PeriodIntelligenceSummary from "@/components/mbie/PeriodIntelligenceSummary";
 import { getTheme } from "@/engine/theme";
 import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
 import { getAvailableEvidencePeriods } from "@/data/evidenceSnapshots";
@@ -108,6 +109,10 @@ export default function MBIEStudioPage() {
         />
 
         <EconomicFactorChart selectedPeriod={selectedSnapshot.id} />
+        <PeriodIntelligenceSummary
+          result={periodThemeResult}
+          periodLabel={selectedSnapshot.label}
+        />
 
         <section className="mb-8 rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-6">
           <div>

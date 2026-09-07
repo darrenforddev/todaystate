@@ -9,8 +9,6 @@ export default function MarketBrainPage() {
   const industrialRecovery = getTheme("industrial-recovery");
   const nvidia = getCompany("nvidia");
 
-  console.log(industrialRecovery);
-
   return (
     <main className="min-h-screen bg-[#050b14] p-10 text-white">
       <div className="mx-auto max-w-6xl">

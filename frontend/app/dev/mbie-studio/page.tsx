@@ -12,7 +12,7 @@ import SystemStatus from "@/components/mbie/SystemStatus";
 import ConfidenceCard from "@/components/mbie/ConfidenceCard";
 import EconomicFactorChart from "@/components/mbie/EconomicFactorChart";
 import { getTheme } from "@/engine/theme";
-import { getPeriodThemeConviction } from "@/engine/periodTheme";
+import { getPeriodThemeIntelligence } from "@/engine/periodThemeIntelligence";
 import { getAvailableEvidencePeriods } from "@/data/evidenceSnapshots";
 
 import {
@@ -71,7 +71,6 @@ export default function MBIEStudioPage() {
   );
 
   const theme = getThemeIntelligence("industrial-recovery");
-  const confidence = calculateConfidence(sampleConfidenceFactors);
 
   const existingThemeResult = getTheme("industrial-recovery");
 
@@ -80,8 +79,12 @@ export default function MBIEStudioPage() {
   const periodThemeResult = availableEvidencePeriods.includes(
     selectedSnapshot.id,
   )
-    ? getPeriodThemeConviction("industrial-recovery", selectedSnapshot.id)
+    ? getPeriodThemeIntelligence("industrial-recovery", selectedSnapshot.id)
     : null;
+
+  const confidence =
+    periodThemeResult?.confidence ??
+    calculateConfidence(sampleConfidenceFactors);
 
   const isLatestSnapshot =
     selectedSnapshotIndex === monthlySnapshots.length - 1;
@@ -146,11 +149,12 @@ export default function MBIEStudioPage() {
               {periodThemeResult ? (
                 <>
                   <p className="mt-3 text-4xl font-black text-cyan-300">
-                    {periodThemeResult.score}
+                    {periodThemeResult.conviction.score}
                   </p>
 
                   <p className="mt-2 text-sm text-slate-400">
-                    {periodThemeResult.reportPeriod} snapshot using permanent
+                    {periodThemeResult.reportPeriod} snapshot · Confidence{" "}
+                    {periodThemeResult.confidence.confidence}% · using permanent
                     indicator relationships
                   </p>
                 </>

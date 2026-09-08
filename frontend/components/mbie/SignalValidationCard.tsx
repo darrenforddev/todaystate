@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import SignalValidationCharts from "./SignalValidationCharts";
+
 import SignalOutcomeTimeline from "./SignalOutcomeTimeline";
 
 import type { ThemeValidationPreview } from "@/engine/outcomes/themeValidation";
@@ -356,11 +358,18 @@ export default function SignalValidationCard() {
           </div>
 
           {previews.length > 0 && (
-            <SignalOutcomeTimeline
-              previews={previews}
-              selectedInstrumentId={selectedInstrumentId}
-              onInstrumentChange={setSelectedInstrumentId}
-            />
+            <>
+              <SignalValidationCharts
+                previews={previews}
+                selectedInstrumentId={selectedInstrumentId}
+              />
+
+              <SignalOutcomeTimeline
+                previews={previews}
+                selectedInstrumentId={selectedInstrumentId}
+                onInstrumentChange={setSelectedInstrumentId}
+              />
+            </>
           )}
         </>
       )}

@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import SignalOutcomeTimeline from "./SignalOutcomeTimeline";
+
+import type { ThemeValidationPreview } from "@/engine/outcomes/themeValidation";
 
 import type { ThemeValidationSummary } from "@/engine/outcomes/themeValidationSummary";
 
 interface ValidationApiResponse {
   success: boolean;
   summary?: ThemeValidationSummary;
+  previews?: ThemeValidationPreview[];
   message?: string;
 
   marketData?: {
@@ -49,6 +53,8 @@ function getAccuracyStyle(successRate: number | null): string {
 export default function SignalValidationCard() {
   const [summary, setSummary] = useState<ThemeValidationSummary | null>(null);
 
+  const [previews, setPreviews] = useState<ThemeValidationPreview[]>([]);
+
   const [providerName, setProviderName] = useState<string | null>(null);
 
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
@@ -84,9 +90,9 @@ export default function SignalValidationCard() {
 
       setSummary(result.summary);
 
-      setProviderName(result.marketData?.provider ?? null);
+      setPreviews(result.previews ?? []);
 
-      setFetchedAt(result.marketData?.fetchedAt ?? null);
+      setProviderName(result.marketData?.fetchedAt ?? null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -275,6 +281,7 @@ export default function SignalValidationCard() {
               </span>
             )}
           </div>
+          {previews.length > 0 && <SignalOutcomeTimeline previews={previews} />}
         </>
       )}
     </section>

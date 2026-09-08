@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   createTwelveDataProvider,
+  type TwelveDataProvider,
 } from "../todayScore/providers/twelveData";
 
 import {
@@ -14,17 +15,13 @@ import type {
   ProviderDatasetResult,
 } from "../todayScore/providers/types";
 
+import {
+  industrialRecoveryValidationInstruments,
+  type ThemeValidationInstrument,
+} from "./themeValidationUniverse";
+
 const VALIDATION_PRICE_HISTORY_SIZE =
   400;
-
-export const industrialRecoveryInstrument:
-  ProviderCompanyIdentity = {
-    companyId: "xli",
-    companyName:
-      "Industrial Select Sector SPDR Fund",
-    ticker: "XLI",
-    exchangeMic: "ARCX",
-  };
 
 export const broadMarketBenchmark:
   ProviderCompanyIdentity = {
@@ -35,9 +32,31 @@ export const broadMarketBenchmark:
     exchangeMic: "ARCX",
   };
 
+function getPrimaryValidationInstrument():
+  ThemeValidationInstrument {
+  const instrument =
+    industrialRecoveryValidationInstruments.find(
+      (candidate) =>
+        candidate.companyId ===
+        "xli",
+    );
+
+  if (!instrument) {
+    throw new Error(
+      "The primary XLI validation instrument is not configured.",
+    );
+  }
+
+  return instrument;
+}
+
+export const industrialRecoveryInstrument:
+  ThemeValidationInstrument =
+    getPrimaryValidationInstrument();
+
 export interface ThemeMarketHistory {
   instrument:
-    ProviderCompanyIdentity;
+    ThemeValidationInstrument;
 
   benchmark:
     ProviderCompanyIdentity;
@@ -57,8 +76,53 @@ export interface ThemeMarketHistory {
   fetchedAt: string;
 }
 
-export async function fetchThemeMarketHistory():
-  Promise<ThemeMarketHistory> {
+async function fetchPriceHistory(
+  provider: TwelveDataProvider,
+  identity: ProviderCompanyIdentity,
+): Promise<{
+  result: ProviderDatasetResult;
+  prices: PricePoint[];
+}> {
+  const result =
+    await provider.fetchDataset(
+      identity,
+      "price-history",
+      {
+        priceHistoryOutputSize:
+          VALIDATION_PRICE_HISTORY_SIZE,
+      },
+    );
+
+  if (
+    result.status !==
+    "available"
+  ) {
+    throw new Error(
+      `${identity.ticker} price history is unavailable: ${result.message}`,
+    );
+  }
+
+  const prices =
+    parsePricePoints(
+      result,
+    );
+
+  if (prices.length === 0) {
+    throw new Error(
+      `${identity.ticker} returned no usable daily closing prices.`,
+    );
+  }
+
+  return {
+    result,
+    prices,
+  };
+}
+
+async function fetchMarketHistories(
+  instruments:
+    readonly ThemeValidationInstrument[],
+): Promise<ThemeMarketHistory[]> {
   const provider =
     createTwelveDataProvider();
 
@@ -69,87 +133,91 @@ export async function fetchThemeMarketHistory():
   }
 
   /**
-   * Deliberately sequential to avoid unnecessary
-   * request bursts against provider rate limits.
+   * Fetch SPY once because every validation
+   * instrument uses the same broad benchmark.
    */
-  const instrumentResult =
-    await provider.fetchDataset(
-      industrialRecoveryInstrument,
-      "price-history",
-      {
-        priceHistoryOutputSize:
-          VALIDATION_PRICE_HISTORY_SIZE,
-      },
-    );
-
-  const benchmarkResult =
-    await provider.fetchDataset(
+  const benchmarkHistory =
+    await fetchPriceHistory(
+      provider,
       broadMarketBenchmark,
-      "price-history",
-      {
-        priceHistoryOutputSize:
-          VALIDATION_PRICE_HISTORY_SIZE,
-      },
     );
 
-  if (
-    instrumentResult.status !==
-    "available"
+  const fetchedAt =
+    new Date().toISOString();
+
+  const histories:
+    ThemeMarketHistory[] = [];
+
+  /**
+   * Deliberately sequential to avoid request bursts
+   * against the provider's rate limits.
+   */
+  for (
+    const instrument of instruments
   ) {
-    throw new Error(
-      `XLI price history is unavailable: ${instrumentResult.message}`,
-    );
+    const instrumentHistory =
+      await fetchPriceHistory(
+        provider,
+        instrument,
+      );
+
+    histories.push({
+      instrument,
+      benchmark:
+        broadMarketBenchmark,
+
+      instrumentResult:
+        instrumentHistory.result,
+
+      benchmarkResult:
+        benchmarkHistory.result,
+
+      instrumentPrices:
+        instrumentHistory.prices,
+
+      benchmarkPrices:
+        benchmarkHistory.prices,
+
+      fetchedAt,
+    });
   }
 
-  if (
-    benchmarkResult.status !==
-    "available"
-  ) {
-    throw new Error(
-      `SPY price history is unavailable: ${benchmarkResult.message}`,
-    );
-  }
+  return histories;
+}
 
-  const instrumentPrices =
-    parsePricePoints(
-      instrumentResult,
-    );
-
-  const benchmarkPrices =
-    parsePricePoints(
-      benchmarkResult,
-    );
-
-  if (
-    instrumentPrices.length === 0
-  ) {
-    throw new Error(
-      "XLI returned no usable daily closing prices.",
-    );
-  }
-
-  if (
-    benchmarkPrices.length === 0
-  ) {
-    throw new Error(
-      "SPY returned no usable daily closing prices.",
-    );
-  }
-
-  return {
-    instrument:
+/**
+ * Existing single-instrument function retained
+ * for compatibility with the current XLI endpoint.
+ */
+export async function fetchThemeMarketHistory():
+  Promise<ThemeMarketHistory> {
+  const histories =
+    await fetchMarketHistories([
       industrialRecoveryInstrument,
+    ]);
 
-    benchmark:
-      broadMarketBenchmark,
+  const history =
+    histories[0];
 
-    instrumentResult,
-    benchmarkResult,
+  if (!history) {
+    throw new Error(
+      "XLI market history could not be loaded.",
+    );
+  }
 
-    instrumentPrices,
-    benchmarkPrices,
+  return history;
+}
 
-    fetchedAt:
-      new Date().toISOString(),
-  };
+/**
+ * Fetches every configured Industrial Recovery
+ * validation instrument and reuses one SPY history.
+ *
+ * Current provider-request total:
+ * one SPY request plus four instrument requests.
+ */
+export async function fetchAllThemeMarketHistories():
+  Promise<ThemeMarketHistory[]> {
+  return fetchMarketHistories(
+    industrialRecoveryValidationInstruments,
+  );
 }

@@ -26,6 +26,7 @@ export interface ThemeHorizonValidationSummary
 
 export interface ThemeValidationSummary {
   periodCount: number;
+  instrumentCount: number;
   outcomeCount: number;
 
   overall: ThemeValidationCounts;
@@ -108,6 +109,24 @@ export function buildThemeValidationSummary(
         preview.record.outcomes,
     );
 
+      const periodCount =
+    new Set(
+      previews.map(
+        (preview) =>
+          preview.record.signal
+            .reportPeriod,
+      ),
+    ).size;
+
+  const instrumentCount =
+    new Set(
+      previews.map(
+        (preview) =>
+          preview.record.signal
+            .instrumentId,
+      ),
+    ).size;
+
   const overall =
     countStatuses(
       outcomes.map(
@@ -142,9 +161,9 @@ export function buildThemeValidationSummary(
       },
     );
 
-  return {
-    periodCount:
-      previews.length,
+    return {
+    periodCount,
+    instrumentCount,
 
     outcomeCount:
       outcomes.length,

@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 import type { ThemeValidationPreview } from "@/engine/outcomes/themeValidation";
 
 import type {
@@ -140,10 +144,46 @@ function findOutcome(
 export default function SignalOutcomeTimeline({
   previews,
 }: SignalOutcomeTimelineProps) {
-  const orderedPreviews = [...previews].sort((left, right) =>
+  const instruments = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          previews.map((preview) => [
+            preview.record.signal.instrumentId,
+
+            {
+              id: preview.record.signal.instrumentId,
+
+              ticker: preview.record.signal.instrumentTicker,
+
+              name: preview.record.signal.instrumentName,
+            },
+          ]),
+        ).values(),
+      ),
+    [previews],
+  );
+
+  const [selectedInstrumentId, setSelectedInstrumentId] = useState(
+    instruments[0]?.id ?? "all",
+  );
+
+  const visiblePreviews =
+    selectedInstrumentId === "all"
+      ? previews
+      : previews.filter(
+          (preview) =>
+            preview.record.signal.instrumentId === selectedInstrumentId,
+        );
+
+  const orderedPreviews = [...visiblePreviews].sort((left, right) =>
     left.record.signal.reportPeriod.localeCompare(
       right.record.signal.reportPeriod,
     ),
+  );
+
+  const selectedInstrument = instruments.find(
+    (instrument) => instrument.id === selectedInstrumentId,
   );
 
   return (
@@ -161,6 +201,42 @@ export default function SignalOutcomeTimeline({
           Each row connects the original MBIE signal to its corresponding
           investment instrument and subsequent relative performance against the
           benchmark.
+        </p>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {instruments.map((instrument) => (
+            <button
+              key={instrument.id}
+              type="button"
+              onClick={() => setSelectedInstrumentId(instrument.id)}
+              title={instrument.name}
+              className={`min-h-10 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
+                selectedInstrumentId === instrument.id
+                  ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-300"
+                  : "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-500 hover:text-white"
+              }`}
+            >
+              {instrument.ticker}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setSelectedInstrumentId("all")}
+            className={`min-h-10 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
+              selectedInstrumentId === "all"
+                ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-300"
+                : "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-500 hover:text-white"
+            }`}
+          >
+            All
+          </button>
+        </div>
+
+        <p className="mt-4 text-sm text-slate-400" aria-live="polite">
+          {selectedInstrument
+            ? `Showing ${selectedInstrument.name} (${selectedInstrument.ticker})`
+            : `Showing all ${instruments.length} validation instruments`}
         </p>
       </div>
 

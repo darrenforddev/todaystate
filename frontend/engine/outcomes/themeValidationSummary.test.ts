@@ -130,6 +130,10 @@ describe(
           summary.periodCount,
         ).toBe(2);
 
+           expect(
+          summary.instrumentCount,
+        ).toBe(1);
+
         expect(
           summary.outcomeCount,
         ).toBe(8);
@@ -259,6 +263,10 @@ describe(
 
         expect(
           summary.periodCount,
+        ).toBe(0);
+
+              expect(
+          summary.instrumentCount,
         ).toBe(0);
 
         expect(

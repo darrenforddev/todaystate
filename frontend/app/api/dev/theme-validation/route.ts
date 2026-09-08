@@ -8,6 +8,7 @@ import {
 } from "@/data/evidenceSnapshots";
 
 import {
+  fetchAllThemeMarketHistories,
   fetchThemeMarketHistory,
 } from "@/engine/outcomes/themeMarketData";
 
@@ -96,21 +97,13 @@ export async function POST(
 
   try {
     /**
-     * XLI and SPY are fetched only once.
-     * The same point-in-time market history is then
-     * reused across every requested evidence period.
+     * A single-period diagnostic retains the original
+     * XLI-only behaviour and requires only two requests.
      */
-    const marketHistory =
-      await fetchThemeMarketHistory();
-
-    const marketData = {
-      provider: "Twelve Data",
-      adjustedPrices: true,
-      fetchedAt:
-        marketHistory.fetchedAt,
-    };
-
     if (!isAllPeriods) {
+      const marketHistory =
+        await fetchThemeMarketHistory();
+
       const preview =
         buildThemeValidationPreview(
           requestedPeriod,
@@ -122,22 +115,59 @@ export async function POST(
           success: true,
           mode: "single",
           preview,
-          marketData,
+
+          marketData: {
+            provider:
+              "Twelve Data",
+
+            adjustedPrices:
+              true,
+
+            instrumentCount:
+              1,
+
+            fetchedAt:
+              marketHistory
+                .fetchedAt,
+          },
         },
         {
           headers: {
-            "Cache-Control": "no-store",
+            "Cache-Control":
+              "no-store",
           },
         },
       );
     }
 
-       const previews =
-      availablePeriods.map(
+    /**
+     * The all-period diagnostic loads SPY once and
+     * each configured validation instrument once.
+     */
+    const marketHistories =
+      await fetchAllThemeMarketHistories();
+
+    if (
+      marketHistories.length === 0
+    ) {
+      throw new Error(
+        "No theme validation instruments were available.",
+      );
+    }
+
+    /**
+     * Group previews by reporting period so each
+     * month's ETFs and companies stay together.
+     */
+    const previews =
+      availablePeriods.flatMap(
         (reportPeriod) =>
-          buildThemeValidationPreview(
-            reportPeriod,
-            marketHistory,
+          marketHistories.map(
+            (marketHistory) =>
+              buildThemeValidationPreview(
+                reportPeriod,
+                marketHistory,
+              ),
           ),
       );
 
@@ -150,19 +180,67 @@ export async function POST(
       {
         success: true,
         mode: "all",
-          periodCount:
-          previews.length,
+
+        periodCount:
+          summary.periodCount,
+
+        instrumentCount:
+          summary.instrumentCount,
 
         periods:
           availablePeriods,
 
+        instruments:
+          marketHistories.map(
+            (history) => ({
+              instrumentId:
+                history.instrument
+                  .companyId,
+
+              ticker:
+                history.instrument
+                  .ticker,
+
+              name:
+                history.instrument
+                  .companyName,
+
+              instrumentType:
+                history.instrument
+                  .instrumentType,
+
+              validationRole:
+                history.instrument
+                  .validationRole,
+            }),
+          ),
+
         summary,
         previews,
-        marketData,
+
+        marketData: {
+          provider:
+            "Twelve Data",
+
+          adjustedPrices:
+            true,
+
+          instrumentCount:
+            marketHistories.length,
+
+          requestCount:
+            marketHistories.length +
+            1,
+
+          fetchedAt:
+            marketHistories[0]
+              .fetchedAt,
+        },
       },
       {
         headers: {
-          "Cache-Control": "no-store",
+          "Cache-Control":
+            "no-store",
         },
       },
     );

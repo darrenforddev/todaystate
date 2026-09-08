@@ -4,6 +4,8 @@ import type {
   SelectionDecision,
 } from "./types";
 
+const INCONCLUSIVE_RELATIVE_RETURN_THRESHOLD = 1;
+
 export interface OutcomeReviewInput {
   selectionId: string;
   decision: SelectionDecision;
@@ -164,9 +166,13 @@ export function calculateOutcomeReview(
       : longRelativeReturn;
 
   const status: Exclude<OutcomeStatus, "pending"> =
-    relativeReturn > 0
-      ? "successful"
-      : "unsuccessful";
+  relativeReturn >
+  INCONCLUSIVE_RELATIVE_RETURN_THRESHOLD
+    ? "successful"
+    : relativeReturn <
+        -INCONCLUSIVE_RELATIVE_RETURN_THRESHOLD
+      ? "unsuccessful"
+      : "inconclusive";
 
   const direction =
     input.decision === "long"
@@ -174,19 +180,21 @@ export function calculateOutcomeReview(
       : "underperformed";
 
   const explanation =
-    status === "successful"
+  status === "inconclusive"
+    ? `The ${input.decision} selection was inconclusive because its relative result was within ${INCONCLUSIVE_RELATIVE_RETURN_THRESHOLD.toFixed(
+        2,
+      )} percentage point of the benchmark.`
+    : status === "successful"
       ? `The ${input.decision} selection succeeded because the company ${direction} the benchmark by ${Math.abs(
           longRelativeReturn,
         ).toFixed(2)} percentage points.`
-      : relativeReturn === 0
-        ? `The ${input.decision} selection was unsuccessful because the company matched the benchmark and produced no relative advantage.`
-        : `The ${input.decision} selection was unsuccessful because the company ${
-            input.decision === "long"
-              ? "underperformed"
-              : "outperformed"
-          } the benchmark by ${Math.abs(
-            longRelativeReturn,
-          ).toFixed(2)} percentage points.`;
+      : `The ${input.decision} selection was unsuccessful because the company ${
+          input.decision === "long"
+            ? "underperformed"
+            : "outperformed"
+        } the benchmark by ${Math.abs(
+          longRelativeReturn,
+        ).toFixed(2)} percentage points.`;
 
   return {
     selectionId: input.selectionId,

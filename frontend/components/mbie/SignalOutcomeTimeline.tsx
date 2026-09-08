@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { ThemeValidationPreview } from "@/engine/outcomes/themeValidation";
 
@@ -13,6 +13,10 @@ import type { OutcomeHorizon } from "@/engine/outcomes/types";
 
 interface SignalOutcomeTimelineProps {
   previews: ThemeValidationPreview[];
+
+  selectedInstrumentId: string;
+
+  onInstrumentChange: (instrumentId: string) => void;
 }
 
 interface HorizonDefinition {
@@ -143,6 +147,8 @@ function findOutcome(
 
 export default function SignalOutcomeTimeline({
   previews,
+  selectedInstrumentId,
+  onInstrumentChange,
 }: SignalOutcomeTimelineProps) {
   const instruments = useMemo(
     () =>
@@ -162,10 +168,6 @@ export default function SignalOutcomeTimeline({
         ).values(),
       ),
     [previews],
-  );
-
-  const [selectedInstrumentId, setSelectedInstrumentId] = useState(
-    instruments[0]?.id ?? "all",
   );
 
   const visiblePreviews =
@@ -208,7 +210,7 @@ export default function SignalOutcomeTimeline({
             <button
               key={instrument.id}
               type="button"
-              onClick={() => setSelectedInstrumentId(instrument.id)}
+              onClick={() => onInstrumentChange(instrument.id)}
               title={instrument.name}
               className={`min-h-10 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
                 selectedInstrumentId === instrument.id
@@ -222,7 +224,7 @@ export default function SignalOutcomeTimeline({
 
           <button
             type="button"
-            onClick={() => setSelectedInstrumentId("all")}
+            onClick={() => onInstrumentChange("all")}
             className={`min-h-10 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition ${
               selectedInstrumentId === "all"
                 ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-300"

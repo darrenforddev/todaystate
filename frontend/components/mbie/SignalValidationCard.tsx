@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
 import SignalOutcomeTimeline from "./SignalOutcomeTimeline";
 
 import type { ThemeValidationPreview } from "@/engine/outcomes/themeValidation";
 
-import type { ThemeValidationSummary } from "@/engine/outcomes/themeValidationSummary";
+import {
+  buildThemeValidationSummary,
+  type ThemeValidationSummary,
+} from "@/engine/outcomes/themeValidationSummary";
 
 interface ValidationApiResponse {
   success: boolean;
@@ -16,6 +20,7 @@ interface ValidationApiResponse {
   marketData?: {
     provider: string;
     adjustedPrices: boolean;
+    instrumentCount?: number;
     fetchedAt: string;
   };
 }
@@ -55,6 +60,8 @@ export default function SignalValidationCard() {
 
   const [previews, setPreviews] = useState<ThemeValidationPreview[]>([]);
 
+  const [selectedInstrumentId, setSelectedInstrumentId] = useState("all");
+
   const [providerName, setProviderName] = useState<string | null>(null);
 
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
@@ -62,6 +69,40 @@ export default function SignalValidationCard() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const activePreviews = useMemo(
+    () =>
+      selectedInstrumentId === "all"
+        ? previews
+        : previews.filter(
+            (preview) =>
+              preview.record.signal.instrumentId === selectedInstrumentId,
+          ),
+    [previews, selectedInstrumentId],
+  );
+
+  const activeSummary = useMemo(() => {
+    if (!summary) {
+      return null;
+    }
+
+    if (selectedInstrumentId === "all") {
+      return summary;
+    }
+
+    return buildThemeValidationSummary(activePreviews);
+  }, [activePreviews, selectedInstrumentId, summary]);
+
+  const selectedInstrument = previews.find(
+    (preview) => preview.record.signal.instrumentId === selectedInstrumentId,
+  )?.record.signal;
+
+  const viewLabel =
+    selectedInstrumentId === "all"
+      ? "Combined instrument view"
+      : selectedInstrument
+        ? `${selectedInstrument.instrumentName} (${selectedInstrument.instrumentTicker})`
+        : "Selected instrument";
 
   async function runValidation() {
     setIsLoading(true);
@@ -88,11 +129,19 @@ export default function SignalValidationCard() {
         );
       }
 
+      const nextPreviews = result.previews ?? [];
+
       setSummary(result.summary);
 
-      setPreviews(result.previews ?? []);
+      setPreviews(nextPreviews);
 
-      setProviderName(result.marketData?.fetchedAt ?? null);
+      setSelectedInstrumentId(
+        nextPreviews[0]?.record.signal.instrumentId ?? "all",
+      );
+
+      setProviderName(result.marketData?.provider ?? null);
+
+      setFetchedAt(result.marketData?.fetchedAt ?? null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -118,7 +167,7 @@ export default function SignalValidationCard() {
 
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
             Tests whether historical MBIE signals were followed by the expected
-            relative performance of XLI against SPY.
+            relative performance of industrial ETFs and companies against SPY.
           </p>
         </div>
 
@@ -129,7 +178,7 @@ export default function SignalValidationCard() {
           className="min-h-11 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-cyan-300 transition hover:bg-cyan-400/20 disabled:cursor-wait disabled:opacity-60"
         >
           {isLoading
-            ? "Running…"
+            ? "Running..."
             : summary
               ? "Refresh validation"
               : "Run validation"}
@@ -145,16 +194,39 @@ export default function SignalValidationCard() {
       {!summary && !errorMessage && (
         <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900/50 p-6">
           <p className="text-sm leading-6 text-slate-400">
-            Run validation to fetch adjusted XLI and SPY prices and evaluate
-            every available reporting period. Provider data is requested only
-            when you press the button.
+            Run validation to fetch adjusted prices for the configured
+            industrial instruments and SPY, then evaluate every available
+            reporting period. Provider data is requested only when you press the
+            button.
           </p>
         </div>
       )}
 
-      {summary && (
+      {summary && activeSummary && (
         <>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">
+                Active validation view
+              </p>
+
+              <p
+                className="mt-1 text-sm font-bold text-white"
+                aria-live="polite"
+              >
+                {viewLabel}
+              </p>
+            </div>
+
+            <span className="rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 text-xs font-bold text-slate-300">
+              {activeSummary.instrumentCount}{" "}
+              {activeSummary.instrumentCount === 1
+                ? "instrument"
+                : "instruments"}
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Decisive accuracy
@@ -162,10 +234,10 @@ export default function SignalValidationCard() {
 
               <p
                 className={`mt-2 text-4xl font-black ${getAccuracyStyle(
-                  summary.overall.successRate,
+                  activeSummary.overall.successRate,
                 )}`}
               >
-                {formatAccuracy(summary.overall.successRate)}
+                {formatAccuracy(activeSummary.overall.successRate)}
               </p>
             </div>
 
@@ -175,7 +247,7 @@ export default function SignalValidationCard() {
               </p>
 
               <p className="mt-2 text-3xl font-black text-emerald-300">
-                {summary.overall.successful}
+                {activeSummary.overall.successful}
               </p>
             </div>
 
@@ -185,7 +257,7 @@ export default function SignalValidationCard() {
               </p>
 
               <p className="mt-2 text-3xl font-black text-rose-300">
-                {summary.overall.unsuccessful}
+                {activeSummary.overall.unsuccessful}
               </p>
             </div>
 
@@ -195,7 +267,7 @@ export default function SignalValidationCard() {
               </p>
 
               <p className="mt-2 text-3xl font-black text-amber-300">
-                {summary.overall.inconclusive}
+                {activeSummary.overall.inconclusive}
               </p>
             </div>
 
@@ -205,7 +277,7 @@ export default function SignalValidationCard() {
               </p>
 
               <p className="mt-2 text-3xl font-black text-slate-300">
-                {summary.overall.pending}
+                {activeSummary.overall.pending}
               </p>
             </div>
           </div>
@@ -221,7 +293,7 @@ export default function SignalValidationCard() {
               <span className="text-right">Accuracy</span>
             </div>
 
-            {summary.byHorizon.map((item) => (
+            {activeSummary.byHorizon.map((item) => (
               <div
                 key={item.horizon}
                 className="grid grid-cols-4 gap-3 border-t border-slate-800 px-4 py-4 text-sm"
@@ -256,18 +328,19 @@ export default function SignalValidationCard() {
 
             <p className="mt-2 text-sm leading-6 text-slate-400">
               This is a small and overlapping historical sample. Results measure
-              XLI performance relative to SPY and do not by themselves prove or
-              disprove the underlying economic evidence. Relative movements
-              within one percentage point are classified as inconclusive.
+              each industrial instrument relative to SPY and do not by
+              themselves prove or disprove the underlying economic evidence.
+              Relative movements within one percentage point are classified as
+              inconclusive.
             </p>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
-            <span>{summary.periodCount} reporting periods</span>
+            <span>{activeSummary.periodCount} reporting periods</span>
 
-            <span>{summary.overall.completed} completed outcomes</span>
+            <span>{activeSummary.overall.completed} completed outcomes</span>
 
-            <span>{summary.overall.decisive} decisive outcomes</span>
+            <span>{activeSummary.overall.decisive} decisive outcomes</span>
 
             {providerName && <span>Source: {providerName}</span>}
 
@@ -281,7 +354,14 @@ export default function SignalValidationCard() {
               </span>
             )}
           </div>
-          {previews.length > 0 && <SignalOutcomeTimeline previews={previews} />}
+
+          {previews.length > 0 && (
+            <SignalOutcomeTimeline
+              previews={previews}
+              selectedInstrumentId={selectedInstrumentId}
+              onInstrumentChange={setSelectedInstrumentId}
+            />
+          )}
         </>
       )}
     </section>

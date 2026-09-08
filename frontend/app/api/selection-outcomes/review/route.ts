@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-
-import { sql } from "@/lib/db";
+import {
+  NextResponse,
+} from "next/server";
 
 import {
   calculateOutcomeReview,
@@ -15,14 +15,26 @@ import {
   saveOutcomeExplanation,
 } from "@/engine/outcomes/selectionOutcomeRepository";
 
+import type {
+  OutcomeExplanationCause,
+  OutcomeExplanationFactor,
+} from "@/engine/outcomes/types";
+
+import {
+  sql,
+} from "@/lib/db";
+
 interface ReviewRequestBody {
   selectionId?: unknown;
   horizon?: unknown;
   companyReviewPrice?: unknown;
   benchmarkReviewPrice?: unknown;
   reviewedAt?: unknown;
+  explanationCause?: unknown;
+  explanationNotes?: unknown;
+  unexpectedEvents?: unknown;
+  lessons?: unknown;
 }
-
 interface SelectionSnapshotRow {
   selection_id: string;
   company_name: string;
@@ -49,6 +61,87 @@ function isValidHorizon(
     value === "six-month" ||
     value === "twelve-month"
   );
+}
+
+function isValidExplanationCause(
+  value: unknown,
+): value is OutcomeExplanationCause {
+  return (
+    value === "theme" ||
+    value === "market" ||
+    value === "company" ||
+    value === "today-score" ||
+    value === "macro" ||
+    value === "timing" ||
+    value === "unexpected-event" ||
+    value === "insufficient-evidence"
+  );
+}
+
+function readOptionalText(
+  value: unknown,
+  fieldName: string,
+): string {
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be text.`);
+  }
+
+  const result = value.trim();
+
+  if (result.length > 2_000) {
+    throw new Error(
+      `${fieldName} must not exceed 2,000 characters.`,
+    );
+  }
+
+  return result;
+}
+
+function readTextList(
+  value: unknown,
+  fieldName: string,
+): string[] {
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be a list.`);
+  }
+
+  if (value.length > 20) {
+    throw new Error(
+      `${fieldName} must not contain more than 20 items.`,
+    );
+  }
+
+  return value.map((item, index) => {
+    if (typeof item !== "string") {
+      throw new Error(
+        `${fieldName} item ${index + 1} must be text.`,
+      );
+    }
+
+    const result = item.trim();
+
+    if (!result) {
+      throw new Error(
+        `${fieldName} item ${index + 1} must not be empty.`,
+      );
+    }
+
+    if (result.length > 500) {
+      throw new Error(
+        `${fieldName} item ${index + 1} must not exceed 500 characters.`,
+      );
+    }
+
+    return result;
+  });
 }
 
 function readPositiveNumber(
@@ -106,8 +199,7 @@ export async function PATCH(request: Request) {
       "Company review price",
     );
 
-    const benchmarkReviewPrice =
-      readPositiveNumber(
+    const benchmarkReviewPrice = readPositiveNumber(
       body.benchmarkReviewPrice,
       "Benchmark review price",
     );
@@ -117,6 +209,60 @@ export async function PATCH(request: Request) {
       body.reviewedAt.trim()
         ? body.reviewedAt.trim()
         : getTodayUtc();
+
+    const explanationCauseInput =
+      body.explanationCause;
+
+    if (
+      explanationCauseInput !== undefined &&
+      !isValidExplanationCause(
+        explanationCauseInput,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "A valid explanation cause is required.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const explanationCause:
+      OutcomeExplanationCause =
+        explanationCauseInput === undefined
+          ? "insufficient-evidence"
+          : explanationCauseInput;
+
+    const explanationNotes = readOptionalText(
+      body.explanationNotes,
+      "Explanation notes",
+    );
+
+    const unexpectedEvents = readTextList(
+      body.unexpectedEvents,
+      "Unexpected events",
+    );
+
+    const lessons = readTextList(
+      body.lessons,
+      "Lessons",
+    );
+
+    if (
+      explanationCause !== "insufficient-evidence" &&
+      !explanationNotes
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Explanation notes are required for the selected cause.",
+        },
+        { status: 400 },
+      );
+    }
 
     const selectionRows = await sql`
       SELECT
@@ -192,15 +338,12 @@ export async function PATCH(request: Request) {
       selectionId,
       decision: selection.decision,
       horizon: body.horizon,
-
       measurementDate:
         pendingOutcome.measurement_date,
       reviewedAt,
-
       companyEntryPrice:
         selection.entry_price,
       companyReviewPrice,
-
       benchmarkEntryPrice:
         selection.benchmark_entry_price,
       benchmarkReviewPrice,
@@ -257,49 +400,68 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const reviewedFactorImpact =
+      review.status === "successful" ||
+      (review.status === "inconclusive" &&
+        review.relativeReturn > 0)
+        ? "supportive"
+        : review.status === "unsuccessful" ||
+            (review.status === "inconclusive" &&
+              review.relativeReturn < 0)
+          ? "contradictory"
+          : null;
+
+    const reviewedFactor:
+      OutcomeExplanationFactor | null =
+        explanationCause !==
+          "insufficient-evidence" &&
+        explanationNotes &&
+        reviewedFactorImpact
+          ? {
+              cause: explanationCause,
+              impact: reviewedFactorImpact,
+              title: "Outcome review evidence",
+              explanation: explanationNotes,
+            }
+          : null;
+
+    const supportingFactors =
+      reviewedFactor?.impact === "supportive"
+        ? [reviewedFactor]
+        : [];
+
+    const contradictoryFactors =
+      reviewedFactor?.impact === "contradictory"
+        ? [reviewedFactor]
+        : [];
+
     const outcomeExplanation =
       generateOutcomeExplanation({
         selection: {
-          companyName:
-            selection.company_name,
-          decision:
-            selection.decision,
+          companyName: selection.company_name,
+          decision: selection.decision,
         },
-
         outcome: {
-          horizon:
-            review.horizon,
-
+          horizon: review.horizon,
           measurementDate:
             review.measurementDate,
-
-          reviewedAt:
-            review.reviewedAt,
-
+          reviewedAt: review.reviewedAt,
           companyReviewPrice:
             review.companyReviewPrice,
-
           benchmarkReviewPrice:
             review.benchmarkReviewPrice,
-
-          companyReturn:
-            review.companyReturn,
-
+          companyReturn: review.companyReturn,
           benchmarkReturn:
             review.benchmarkReturn,
-
-          relativeReturn:
-            review.relativeReturn,
-
-          status:
-            review.status,
-
-          explanation:
-            review.explanation,
+          relativeReturn: review.relativeReturn,
+          status: review.status,
+          explanation: review.explanation,
         },
-
-        generatedAt:
-          review.reviewedAt,
+        supportingFactors,
+        contradictoryFactors,
+        unexpectedEvents,
+        lessons,
+        generatedAt: review.reviewedAt,
       });
 
     await saveOutcomeExplanation(

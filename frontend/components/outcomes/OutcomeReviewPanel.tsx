@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import type { SelectionOutcomeRecord } from "@/engine/outcomes/types";
-
 import { isOutcomeDue } from "@/engine/outcomes/outcomeReview";
+
+import type {
+  OutcomeExplanationCause,
+  SelectionOutcomeRecord,
+} from "@/engine/outcomes/types";
 
 interface OutcomeReviewPanelProps {
   records: SelectionOutcomeRecord[];
@@ -14,6 +17,7 @@ interface OutcomeReviewPanelProps {
 
 interface PendingReview {
   record: SelectionOutcomeRecord;
+
   outcome: SelectionOutcomeRecord["outcomes"][number];
 }
 
@@ -22,11 +26,58 @@ interface ReviewApiResponse {
   error?: string;
 }
 
+interface CauseOption {
+  value: OutcomeExplanationCause;
+  label: string;
+}
+
+const CAUSE_OPTIONS: CauseOption[] = [
+  {
+    value: "theme",
+    label: "Theme development",
+  },
+  {
+    value: "market",
+    label: "Market conditions",
+  },
+  {
+    value: "company",
+    label: "Company-specific result",
+  },
+  {
+    value: "today-score",
+    label: "TodayScore factors",
+  },
+  {
+    value: "macro",
+    label: "Macroeconomic conditions",
+  },
+  {
+    value: "timing",
+    label: "Signal timing",
+  },
+  {
+    value: "unexpected-event",
+    label: "Unexpected event",
+  },
+  {
+    value: "insufficient-evidence",
+    label: "Insufficient evidence",
+  },
+];
+
 function formatHorizon(horizon: string): string {
   return horizon
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function readLines(value: string): string[] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 export default function OutcomeReviewPanel({
@@ -57,6 +108,15 @@ export default function OutcomeReviewPanel({
 
   const [benchmarkReviewPrice, setBenchmarkReviewPrice] = useState("");
 
+  const [explanationCause, setExplanationCause] =
+    useState<OutcomeExplanationCause>("insufficient-evidence");
+
+  const [explanationNotes, setExplanationNotes] = useState("");
+
+  const [unexpectedEvents, setUnexpectedEvents] = useState("");
+
+  const [lessons, setLessons] = useState("");
+
   const [isSaving, setIsSaving] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -71,14 +131,15 @@ export default function OutcomeReviewPanel({
 
     const selectedStillExists = dueReviews.some(
       ({ record, outcome }) =>
-        `${record.selection.selectionId}:${outcome.horizon}` === selectedKey,
+        `${record.selection.selectionId}:` + outcome.horizon === selectedKey,
     );
 
     if (!selectedStillExists) {
       const firstReview = dueReviews[0];
 
       setSelectedKey(
-        `${firstReview.record.selection.selectionId}:${firstReview.outcome.horizon}`,
+        `${firstReview.record.selection.selectionId}:` +
+          firstReview.outcome.horizon,
       );
     }
   }, [dueReviews, selectedKey]);
@@ -86,7 +147,7 @@ export default function OutcomeReviewPanel({
   const selectedReview =
     dueReviews.find(
       ({ record, outcome }) =>
-        `${record.selection.selectionId}:${outcome.horizon}` === selectedKey,
+        `${record.selection.selectionId}:` + outcome.horizon === selectedKey,
     ) ?? null;
 
   async function handleSubmit(
@@ -116,14 +177,24 @@ export default function OutcomeReviewPanel({
       return;
     }
 
+    if (
+      explanationCause !== "insufficient-evidence" &&
+      !explanationNotes.trim()
+    ) {
+      setErrorMessage("Add explanation notes for the selected cause.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
       const response = await fetch("/api/selection-outcomes/review", {
         method: "PATCH",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           selectionId: selectedReview.record.selection.selectionId,
 
@@ -134,6 +205,14 @@ export default function OutcomeReviewPanel({
           benchmarkReviewPrice: benchmarkPrice,
 
           reviewedAt: asOfDate,
+
+          explanationCause,
+
+          explanationNotes: explanationNotes.trim(),
+
+          unexpectedEvents: readLines(unexpectedEvents),
+
+          lessons: readLines(lessons),
         }),
       });
 
@@ -148,11 +227,16 @@ export default function OutcomeReviewPanel({
       setCompanyReviewPrice("");
       setBenchmarkReviewPrice("");
 
+      setExplanationCause("insufficient-evidence");
+
+      setExplanationNotes("");
+      setUnexpectedEvents("");
+      setLessons("");
+
       setSuccessMessage(
-        `${selectedReview.record.selection.companyName} ` +
-          `${formatHorizon(
-            selectedReview.outcome.horizon,
-          )} review saved successfully.`,
+        `${selectedReview.record.selection.companyName} ${formatHorizon(
+          selectedReview.outcome.horizon,
+        )} review saved successfully.`,
       );
 
       if (onReviewSaved) {
@@ -212,6 +296,7 @@ export default function OutcomeReviewPanel({
               value={selectedKey}
               onChange={(event) => {
                 setSelectedKey(event.target.value);
+
                 setErrorMessage("");
                 setSuccessMessage("");
               }}
@@ -223,8 +308,10 @@ export default function OutcomeReviewPanel({
 
                 return (
                   <option key={key} value={key}>
-                    {record.selection.companyName} —{" "}
-                    {formatHorizon(outcome.horizon)} — due{" "}
+                    {record.selection.companyName}
+                    {" — "}
+                    {formatHorizon(outcome.horizon)}
+                    {" — due "}
                     {outcome.measurementDate}
                   </option>
                 );
@@ -320,6 +407,101 @@ export default function OutcomeReviewPanel({
             </div>
           </div>
 
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
+            <div>
+              <h3 className="font-semibold text-white">Outcome explanation</h3>
+
+              <p className="mt-1 text-sm leading-6 text-slate-400">
+                Record the evidence available at the review date. Use one line
+                per unexpected event or lesson.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  className="mb-2 block text-sm font-semibold text-slate-200"
+                  htmlFor="explanation-cause"
+                >
+                  Primary cause
+                </label>
+
+                <select
+                  id="explanation-cause"
+                  value={explanationCause}
+                  onChange={(event) =>
+                    setExplanationCause(
+                      event.target.value as OutcomeExplanationCause,
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                >
+                  {CAUSE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  className="mb-2 block text-sm font-semibold text-slate-200"
+                  htmlFor="explanation-notes"
+                >
+                  Explanation notes
+                </label>
+
+                <textarea
+                  id="explanation-notes"
+                  rows={4}
+                  value={explanationNotes}
+                  onChange={(event) => setExplanationNotes(event.target.value)}
+                  placeholder="Explain why the prediction worked or failed"
+                  className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  className="mb-2 block text-sm font-semibold text-slate-200"
+                  htmlFor="unexpected-events"
+                >
+                  Unexpected events
+                </label>
+
+                <textarea
+                  id="unexpected-events"
+                  rows={4}
+                  value={unexpectedEvents}
+                  onChange={(event) => setUnexpectedEvents(event.target.value)}
+                  placeholder="One event per line"
+                  className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="mb-2 block text-sm font-semibold text-slate-200"
+                  htmlFor="outcome-lessons"
+                >
+                  Lessons learned
+                </label>
+
+                <textarea
+                  id="outcome-lessons"
+                  rows={4}
+                  value={lessons}
+                  onChange={(event) => setLessons(event.target.value)}
+                  placeholder="One lesson per line"
+                  className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                />
+              </div>
+            </div>
+          </div>
+
           {errorMessage && (
             <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {errorMessage}
@@ -340,9 +522,9 @@ export default function OutcomeReviewPanel({
               !companyReviewPrice ||
               !benchmarkReviewPrice
             }
-            className="rounded-xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+            className="min-h-11 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-cyan-300 transition hover:bg-cyan-400/20 disabled:cursor-wait disabled:opacity-60"
           >
-            {isSaving ? "Saving Review..." : "Complete Outcome Review"}
+            {isSaving ? "Saving..." : "Complete review"}
           </button>
         </form>
       )}

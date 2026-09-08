@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 
 import type {
   HorizonOutcome,
+  OutcomeExplanation,
   OutcomeHorizon,
   OutcomeReview,
   OutcomeStatus,
@@ -53,6 +54,28 @@ interface HorizonOutcomeRow {
   relative_return: number | null;
 
   status: OutcomeStatus;
+}
+
+interface OutcomeExplanationRow {
+  selection_id: string;
+  horizon: OutcomeHorizon;
+
+  summary: string;
+  prediction_was_correct: boolean | null;
+  primary_cause:
+    OutcomeExplanation["primaryCause"];
+
+  supporting_factors:
+    OutcomeExplanation["supportingFactors"];
+
+  contradictory_factors:
+    OutcomeExplanation["contradictoryFactors"];
+
+  unexpected_events: string[];
+  lessons: string[];
+
+    confidence_adjustment: number;
+  generated_at: string;
 }
 
 interface OutcomeReviewRow {
@@ -131,6 +154,42 @@ benchmarkReviewPrice:
   };
 }
 
+function mapOutcomeExplanation(
+  row: OutcomeExplanationRow,
+): OutcomeExplanation {
+  return {
+    summary: row.summary,
+
+    predictionWasCorrect:
+      row.prediction_was_correct,
+
+    primaryCause: row.primary_cause,
+
+    supportingFactors:
+      row.supporting_factors ?? [],
+
+    contradictoryFactors:
+      row.contradictory_factors ?? [],
+
+    unexpectedEvents:
+      row.unexpected_events ?? [],
+
+    lessons: row.lessons ?? [],
+
+    confidenceAdjustment:
+      row.confidence_adjustment,
+
+    generatedAt: row.generated_at,
+  };
+}
+
+function getOutcomeKey(
+  selectionId: string,
+  horizon: OutcomeHorizon,
+): string {
+  return `${selectionId}:${horizon}`;
+}
+
 function mapOutcomeReview(
   row: OutcomeReviewRow,
 ): OutcomeReview {
@@ -197,6 +256,22 @@ Promise<SelectionOutcomeRecord[]> {
     ORDER BY measurement_date, horizon;
   `;
 
+  const explanationRows = await sql`
+  SELECT
+    selection_id,
+    horizon,
+    summary,
+    prediction_was_correct,
+    primary_cause,
+    supporting_factors,
+    contradictory_factors,
+    unexpected_events,
+    lessons,
+    confidence_adjustment,
+    generated_at::text AS generated_at
+  FROM selection_horizon_outcome_explanations;
+`;
+
   const reviewRows = await sql`
     SELECT
       selection_id,
@@ -209,23 +284,54 @@ Promise<SelectionOutcomeRecord[]> {
       lessons
     FROM selection_outcome_reviews;
   `;
+const explanationsByOutcome = new Map<
+  string,
+  OutcomeExplanation
+>();
 
+for (
+  const row of
+    explanationRows as OutcomeExplanationRow[]
+) {
+  explanationsByOutcome.set(
+    getOutcomeKey(
+      row.selection_id,
+      row.horizon,
+    ),
+    mapOutcomeExplanation(row),
+  );
+}
   const outcomesBySelection = new Map<
     string,
     HorizonOutcome[]
   >();
 
   for (const row of outcomeRows as HorizonOutcomeRow[]) {
-    const outcomes =
-      outcomesBySelection.get(row.selection_id) ?? [];
+  const outcomes =
+    outcomesBySelection.get(row.selection_id) ?? [];
 
-    outcomes.push(mapHorizonOutcome(row));
+  const outcome = mapHorizonOutcome(row);
 
-    outcomesBySelection.set(
-      row.selection_id,
-      outcomes,
+  const outcomeExplanation =
+    explanationsByOutcome.get(
+      getOutcomeKey(
+        row.selection_id,
+        row.horizon,
+      ),
     );
-  }
+
+  outcomes.push({
+    ...outcome,
+    ...(outcomeExplanation
+      ? { outcomeExplanation }
+      : {}),
+  });
+
+  outcomesBySelection.set(
+    row.selection_id,
+    outcomes,
+  );
+}
 
   const reviewsBySelection = new Map<
     string,
@@ -384,6 +490,76 @@ export async function saveHorizonOutcome(
   `;
 }
 
+export async function saveOutcomeExplanation(
+  selectionId: string,
+  horizon: OutcomeHorizon,
+  explanation: OutcomeExplanation,
+): Promise<void> {
+  const supportingFactors =
+    JSON.stringify(
+      explanation.supportingFactors,
+    );
+
+  const contradictoryFactors =
+    JSON.stringify(
+      explanation.contradictoryFactors,
+    );
+
+  await sql`
+    INSERT INTO
+      selection_horizon_outcome_explanations (
+        selection_id,
+        horizon,
+        summary,
+        prediction_was_correct,
+        primary_cause,
+        supporting_factors,
+        contradictory_factors,
+        unexpected_events,
+        lessons,
+        confidence_adjustment,
+        generated_at
+      )
+    VALUES (
+      ${selectionId},
+      ${horizon},
+      ${explanation.summary},
+      ${explanation.predictionWasCorrect},
+      ${explanation.primaryCause},
+      ${supportingFactors}::jsonb,
+      ${contradictoryFactors}::jsonb,
+      ${explanation.unexpectedEvents},
+      ${explanation.lessons},
+      ${explanation.confidenceAdjustment},
+      ${explanation.generatedAt}
+    )
+    ON CONFLICT (
+      selection_id,
+      horizon
+    )
+    DO UPDATE SET
+      summary =
+        EXCLUDED.summary,
+      prediction_was_correct =
+        EXCLUDED.prediction_was_correct,
+      primary_cause =
+        EXCLUDED.primary_cause,
+      supporting_factors =
+        EXCLUDED.supporting_factors,
+      contradictory_factors =
+        EXCLUDED.contradictory_factors,
+      unexpected_events =
+        EXCLUDED.unexpected_events,
+      lessons =
+        EXCLUDED.lessons,
+      confidence_adjustment =
+        EXCLUDED.confidence_adjustment,
+      generated_at =
+        EXCLUDED.generated_at,
+      updated_at = now();
+  `;
+}
+
 export async function saveOutcomeReview(
   selectionId: string,
   review: OutcomeReview,
@@ -436,11 +612,19 @@ export async function saveSelectionOutcomeRecord(
     await saveSelectionSnapshot(record.selection);
 
   for (const outcome of record.outcomes) {
-    await saveHorizonOutcome(
+  await saveHorizonOutcome(
+    record.selection.selectionId,
+    outcome,
+  );
+
+  if (outcome.outcomeExplanation) {
+    await saveOutcomeExplanation(
       record.selection.selectionId,
-      outcome,
+      outcome.horizon,
+      outcome.outcomeExplanation,
     );
   }
+}
 
   if (record.review) {
     await saveOutcomeReview(

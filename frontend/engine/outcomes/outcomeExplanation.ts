@@ -7,7 +7,10 @@ import type {
 } from "./types";
 
 export interface OutcomeExplanationInput {
-  selection: SelectionSnapshot;
+  selection: Pick<
+  SelectionSnapshot,
+  "companyName" | "decision"
+>;
   outcome: HorizonOutcome;
 
   supportingFactors?: OutcomeExplanationFactor[];
@@ -78,7 +81,10 @@ function calculateConfidenceAdjustment(
 }
 
 function buildSummary(
-  selection: SelectionSnapshot,
+  selection: Pick<
+  SelectionSnapshot,
+  "companyName" | "decision"
+>,
   outcome: HorizonOutcome,
   predictionWasCorrect: boolean | null,
   primaryCause: OutcomeExplanationCause,

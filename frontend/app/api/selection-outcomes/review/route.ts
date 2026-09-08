@@ -7,6 +7,14 @@ import {
   type OutcomeReviewInput,
 } from "@/engine/outcomes/outcomeReview";
 
+import {
+  generateOutcomeExplanation,
+} from "@/engine/outcomes/outcomeExplanation";
+
+import {
+  saveOutcomeExplanation,
+} from "@/engine/outcomes/selectionOutcomeRepository";
+
 interface ReviewRequestBody {
   selectionId?: unknown;
   horizon?: unknown;
@@ -17,6 +25,7 @@ interface ReviewRequestBody {
 
 interface SelectionSnapshotRow {
   selection_id: string;
+  company_name: string;
   decision: OutcomeReviewInput["decision"];
   entry_price: number;
   benchmark_entry_price: number;
@@ -97,10 +106,12 @@ export async function PATCH(request: Request) {
       "Company review price",
     );
 
-  const benchmarkReviewPrice = readPositiveNumber(
-  body.benchmarkReviewPrice,
-  "Benchmark review price",
-);
+    const benchmarkReviewPrice =
+      readPositiveNumber(
+      body.benchmarkReviewPrice,
+      "Benchmark review price",
+    );
+
     const reviewedAt =
       typeof body.reviewedAt === "string" &&
       body.reviewedAt.trim()
@@ -110,6 +121,7 @@ export async function PATCH(request: Request) {
     const selectionRows = await sql`
       SELECT
         selection_id,
+        company_name,
         decision,
         entry_price::double precision
           AS entry_price,
@@ -245,10 +257,62 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const outcomeExplanation =
+      generateOutcomeExplanation({
+        selection: {
+          companyName:
+            selection.company_name,
+          decision:
+            selection.decision,
+        },
+
+        outcome: {
+          horizon:
+            review.horizon,
+
+          measurementDate:
+            review.measurementDate,
+
+          reviewedAt:
+            review.reviewedAt,
+
+          companyReviewPrice:
+            review.companyReviewPrice,
+
+          benchmarkReviewPrice:
+            review.benchmarkReviewPrice,
+
+          companyReturn:
+            review.companyReturn,
+
+          benchmarkReturn:
+            review.benchmarkReturn,
+
+          relativeReturn:
+            review.relativeReturn,
+
+          status:
+            review.status,
+
+          explanation:
+            review.explanation,
+        },
+
+        generatedAt:
+          review.reviewedAt,
+      });
+
+    await saveOutcomeExplanation(
+      review.selectionId,
+      review.horizon,
+      outcomeExplanation,
+    );
+
     return NextResponse.json({
       success: true,
       review,
       outcome: updatedRows[0],
+      outcomeExplanation,
     });
   } catch (error) {
     const message =

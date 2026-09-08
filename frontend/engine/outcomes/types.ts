@@ -40,7 +40,7 @@ export interface OutcomeExplanationFactor {
 
 export interface OutcomeExplanation {
   summary: string;
-  predictionWasCorrect: boolean;
+  predictionWasCorrect: boolean | null;
   primaryCause: OutcomeExplanationCause;
 
   supportingFactors: OutcomeExplanationFactor[];

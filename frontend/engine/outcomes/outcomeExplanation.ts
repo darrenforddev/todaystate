@@ -32,7 +32,7 @@ function clamp(
 }
 
 function getPrimaryCause(
-  predictionWasCorrect: boolean,
+  predictionWasCorrect: boolean | null,
   supportingFactors: OutcomeExplanationFactor[],
   contradictoryFactors: OutcomeExplanationFactor[],
 ): OutcomeExplanationCause {
@@ -44,9 +44,9 @@ function getPrimaryCause(
   }
 
   if (
-    !predictionWasCorrect &&
-    contradictoryFactors.length > 0
-  ) {
+  predictionWasCorrect === false &&
+  contradictoryFactors.length > 0
+) {
     return contradictoryFactors[0].cause;
   }
 
@@ -80,7 +80,7 @@ function calculateConfidenceAdjustment(
 function buildSummary(
   selection: SelectionSnapshot,
   outcome: HorizonOutcome,
-  predictionWasCorrect: boolean,
+  predictionWasCorrect: boolean | null,
   primaryCause: OutcomeExplanationCause,
 ): string {
   const relativeReturn =
@@ -96,7 +96,8 @@ function buildSummary(
     );
   }
 
-  const resultText = predictionWasCorrect
+  const resultText =
+  predictionWasCorrect === true
     ? "was correct"
     : "was incorrect";
 
@@ -125,7 +126,11 @@ export function generateOutcomeExplanation(
     input.contradictoryFactors ?? [];
 
   const predictionWasCorrect =
-    input.outcome.status === "successful";
+  input.outcome.status === "successful"
+    ? true
+    : input.outcome.status === "unsuccessful"
+      ? false
+      : null;
 
   const primaryCause = getPrimaryCause(
     predictionWasCorrect,

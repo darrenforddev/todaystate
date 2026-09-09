@@ -15,6 +15,35 @@ export interface BuildOutcomeReplaySeriesInput {
   startDate: string;
   endDate: string;
 }
+export function rebaseOutcomeReplaySeries(
+  series: readonly OutcomeReplayPoint[],
+): OutcomeReplayPoint[] {
+  const firstPoint = series[0];
+
+  if (!firstPoint) {
+    return [];
+  }
+
+  const basePrice = firstPoint.close;
+
+  if (
+    !Number.isFinite(basePrice) ||
+    basePrice <= 0
+  ) {
+    throw new Error(
+      "The replay series must begin with a positive price.",
+    );
+  }
+
+  return series.map((point) => ({
+    ...point,
+    returnFromEntry: roundPercentage(
+      ((point.close - basePrice) /
+        basePrice) *
+        100,
+    ),
+  }));
+}
 
 function assertValidDate(
   value: string,

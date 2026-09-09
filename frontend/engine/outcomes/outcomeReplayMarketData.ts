@@ -17,6 +17,7 @@ import type {
 
 import {
   buildOutcomeReplaySeries,
+  rebaseOutcomeReplaySeries,
   type OutcomeReplayPoint,
 } from "./outcomeReplay";
 
@@ -219,19 +220,25 @@ export async function fetchOutcomeReplayMarketData(
     outputSize,
   );
 
-  const companySeries = buildOutcomeReplaySeries({
-    prices: companyHistory.prices,
-    entryPrice: company.entryPrice,
-    startDate: selection.selectedAt,
-    endDate: outcome.measurementDate,
-  });
+   const companySeries =
+    rebaseOutcomeReplaySeries(
+      buildOutcomeReplaySeries({
+        prices: companyHistory.prices,
+        entryPrice: company.entryPrice,
+        startDate: selection.selectedAt,
+        endDate: outcome.measurementDate,
+      }),
+    );
 
-  const benchmarkSeries = buildOutcomeReplaySeries({
-    prices: benchmarkHistory.prices,
-    entryPrice: benchmark.entryPrice,
-    startDate: selection.selectedAt,
-    endDate: outcome.measurementDate,
-  });
+  const benchmarkSeries =
+    rebaseOutcomeReplaySeries(
+      buildOutcomeReplaySeries({
+        prices: benchmarkHistory.prices,
+        entryPrice: benchmark.entryPrice,
+        startDate: selection.selectedAt,
+        endDate: outcome.measurementDate,
+      }),
+    );
 
   if (companySeries.length === 0) {
     throw new Error(

@@ -6,6 +6,7 @@ import {
 
 import {
   buildOutcomeReplaySeries,
+  rebaseOutcomeReplaySeries,
 } from "./outcomeReplay";
 
 const prices = [
@@ -126,5 +127,29 @@ describe("buildOutcomeReplaySeries", () => {
     ).toThrow(
       "End date must not be before start date.",
     );
+  });
+
+  it("rebases a replay series to its first available close", () => {
+    const original = buildOutcomeReplaySeries({
+      prices,
+      entryPrice: 80,
+      startDate: "2026-01-05",
+      endDate: "2026-01-07",
+    });
+
+    const result =
+      rebaseOutcomeReplaySeries(original);
+
+    expect(
+      result.map(
+        (point) => point.returnFromEntry,
+      ),
+    ).toEqual([0, 5, -5]);
+  });
+
+  it("returns an empty rebased series when no prices exist", () => {
+    expect(
+      rebaseOutcomeReplaySeries([]),
+    ).toEqual([]);
   });
 });

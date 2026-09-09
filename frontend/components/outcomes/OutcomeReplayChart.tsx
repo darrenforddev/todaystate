@@ -344,7 +344,7 @@ export default function OutcomeReplayChart({
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/[0.05] p-4">
                   <p className="text-xs uppercase tracking-wider text-slate-500">
-                    {replay.company.ticker} from entry
+                    {replay.company.ticker} chart-period return
                   </p>
                   <p className="mt-2 text-xl font-black text-cyan-300">
                     {companyReturn === undefined
@@ -355,7 +355,7 @@ export default function OutcomeReplayChart({
 
                 <div className="rounded-xl border border-amber-300/20 bg-amber-300/[0.05] p-4">
                   <p className="text-xs uppercase tracking-wider text-slate-500">
-                    {replay.benchmark.ticker} from entry
+                    {replay.benchmark.ticker} chart-period return
                   </p>
                   <p className="mt-2 text-xl font-black text-amber-200">
                     {benchmarkReturn === undefined
@@ -367,7 +367,8 @@ export default function OutcomeReplayChart({
 
               <p className="mt-4 text-[11px] leading-5 text-slate-600">
                 Adjusted daily closing prices supplied by {replay.providerName}.
-                Returns are measured against the recorded entry prices.
+                Chart lines are rebased to the first available trading close so
+                both instruments begin at 0%.
               </p>
             </>
           )}

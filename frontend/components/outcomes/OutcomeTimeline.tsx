@@ -50,6 +50,9 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
     ...completedReturns.map((value) => Math.abs(value)),
     1,
   );
+  const latestCompletedOutcome = [...outcomes]
+    .reverse()
+    .find((outcome) => outcome.status !== "pending");
 
   return (
     <section className="rounded-3xl border border-cyan-400/20 bg-[#0a1626] p-6">
@@ -218,7 +221,7 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
           </p>
 
           <p className="mt-2 text-lg font-bold text-white">
-            {formatReturn(outcomes[outcomes.length - 1]?.companyReturn)}
+            {formatReturn(latestCompletedOutcome?.companyReturn)}
           </p>
         </div>
 
@@ -228,7 +231,7 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
           </p>
 
           <p className="mt-2 text-lg font-bold text-white">
-            {formatReturn(outcomes[outcomes.length - 1]?.benchmarkReturn)}
+            {formatReturn(latestCompletedOutcome?.benchmarkReturn)}
           </p>
         </div>
 
@@ -238,7 +241,7 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
           </p>
 
           <p className="mt-2 text-lg font-bold text-emerald-300">
-            {formatReturn(outcomes[outcomes.length - 1]?.relativeReturn)}
+            {formatReturn(latestCompletedOutcome?.relativeReturn)}
           </p>
         </div>
       </div>

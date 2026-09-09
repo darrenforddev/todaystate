@@ -3,6 +3,8 @@ import type {
   SelectionOutcomeRecord,
 } from "@/engine/outcomes/types";
 
+import OutcomeExplanationCard from "./OutcomeExplanationCard";
+
 interface OutcomeTimelineProps {
   record: SelectionOutcomeRecord;
 }
@@ -125,6 +127,31 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
           );
         })}
       </div>
+
+      {outcomes.some((outcome) => Boolean(outcome.outcomeExplanation)) && (
+        <div className="mt-7 space-y-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
+              What TodayState learned
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Open a completed horizon to inspect the result, evidence and
+              confidence effect.
+            </p>
+          </div>
+
+          {outcomes.map((outcome) =>
+            outcome.outcomeExplanation ? (
+              <OutcomeExplanationCard
+                key={outcome.horizon}
+                horizon={outcome.horizon}
+                explanation={outcome.outcomeExplanation}
+              />
+            ) : null,
+          )}
+        </div>
+      )}
 
       <div className="mt-7 grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">

@@ -28,16 +28,14 @@ import { valueTestResults } from "@/engine/todayScore/valueTest";
 import { momentumTestResults } from "@/engine/todayScore/momentumTest";
 import { todayScoreTestResults } from "@/engine/todayScore/todayScoreTest";
 
+import { realCompanyUniverse } from "@/data/realCompanyUniverse";
+
+import { realCompanyDemoResults } from "@/engine/todayScore/realCompanyDemoScores";
+
 const confidenceThemeOptions = themes.map(({ id, name }) => ({
   id,
   name,
 }));
-
-const approvalCompanyNames: Record<string, string> = {
-  atlas: "Atlas Industries",
-  beacon: "Beacon Group",
-  cascade: "Cascade Holdings",
-};
 
 export default function MBIEPage() {
   const [outcomeRecords, setOutcomeRecords] = useState<
@@ -49,7 +47,7 @@ export default function MBIEPage() {
   const [outcomesError, setOutcomesError] = useState<string | null>(null);
 
   const [approvalCompanyId, setApprovalCompanyId] = useState(
-    todayScoreTestResults[0]?.companyId ?? "",
+    realCompanyDemoResults[0]?.companyId ?? "",
   );
 
   function handleSelectionRecorded(record: SelectionOutcomeRecord) {
@@ -188,30 +186,46 @@ export default function MBIEPage() {
   ];
 
   const selectedApprovalResult =
-    todayScoreTestResults.find(
+    realCompanyDemoResults.find(
       ({ companyId }) => companyId === approvalCompanyId,
-    ) ?? todayScoreTestResults[0];
+    ) ?? realCompanyDemoResults[0];
 
-  const approvalCandidate = selectedApprovalResult
-    ? {
-        companyId: selectedApprovalResult.companyId,
-        ticker: selectedApprovalResult.companyId.toUpperCase(),
-        companyName:
-          approvalCompanyNames[
-            selectedApprovalResult.companyId.toLowerCase()
-          ] ?? selectedApprovalResult.companyId,
+  const selectedApprovalCompany = selectedApprovalResult
+    ? realCompanyUniverse.find(
+        ({ companyId }) => companyId === selectedApprovalResult.companyId,
+      )
+    : undefined;
 
-        todayScore: selectedApprovalResult.todayScore.score,
-        qualityScore: selectedApprovalResult.todayScore.quality,
-        valueScore: selectedApprovalResult.todayScore.value,
-        momentumScore: selectedApprovalResult.todayScore.momentum,
+  const approvalCandidate =
+    selectedApprovalResult && selectedApprovalCompany
+      ? {
+          companyId: selectedApprovalCompany.companyId,
 
-        themeId: selectedTheme?.id,
-        themeName: selectedTheme?.name,
-        themeScore: scoringScenarios[0].result.score,
-        themeConfidence: confidenceScenarios[0].result.confidence,
-      }
-    : null;
+          ticker: selectedApprovalCompany.ticker,
+
+          companyName: selectedApprovalCompany.companyName,
+
+          exchangeMic: selectedApprovalCompany.exchangeMic,
+
+          quoteCurrency: selectedApprovalCompany.quoteCurrency,
+
+          todayScore: selectedApprovalResult.todayScore.score,
+
+          qualityScore: selectedApprovalResult.todayScore.quality,
+
+          valueScore: selectedApprovalResult.todayScore.value,
+
+          momentumScore: selectedApprovalResult.todayScore.momentum,
+
+          themeId: selectedTheme?.id,
+
+          themeName: selectedTheme?.name,
+
+          themeScore: scoringScenarios[0].result.score,
+
+          themeConfidence: confidenceScenarios[0].result.confidence,
+        }
+      : null;
 
   return (
     <main className="min-h-screen bg-[#020817] px-6 py-12 text-white md:px-12">
@@ -685,11 +699,19 @@ export default function MBIEPage() {
             }}
             className="mt-3 w-full rounded-xl border border-white/10 bg-[#091727] px-4 py-3 font-semibold text-white outline-none focus:border-cyan-400/50"
           >
-            {todayScoreTestResults.map(({ companyId }) => (
-              <option key={companyId} value={companyId}>
-                {approvalCompanyNames[companyId.toLowerCase()] ?? companyId}
-              </option>
-            ))}
+            {realCompanyDemoResults.map(({ companyId }) => {
+              const company = realCompanyUniverse.find(
+                (candidate) => candidate.companyId === companyId,
+              );
+
+              return (
+                <option key={companyId} value={companyId}>
+                  {company
+                    ? `${company.companyName} (${company.ticker})`
+                    : companyId}
+                </option>
+              );
+            })}
           </select>
 
           <p className="mt-3 text-sm leading-6 text-slate-400">

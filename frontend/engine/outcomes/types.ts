@@ -59,6 +59,9 @@ export interface SelectionSnapshot {
   ticker: string;
   companyName: string;
 
+  exchangeMic?: string;
+  quoteCurrency?: string;
+
   decision: SelectionDecision;
   selectedAt: string;
   entryPrice: number;
@@ -75,6 +78,11 @@ export interface SelectionSnapshot {
 
   benchmarkId: string;
   benchmarkName: string;
+
+  benchmarkTicker?: string;
+  benchmarkExchangeMic?: string;
+  benchmarkQuoteCurrency?: string;
+
   benchmarkEntryPrice: number;
 
   thesis: string;

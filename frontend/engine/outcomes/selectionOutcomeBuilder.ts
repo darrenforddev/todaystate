@@ -9,6 +9,9 @@ export interface ApprovedSelectionInput {
   ticker: string;
   companyName: string;
 
+  exchangeMic: string;
+  quoteCurrency: string;
+
   decision: SelectionDecision;
   selectedAt?: string;
   entryPrice: number;
@@ -25,6 +28,9 @@ export interface ApprovedSelectionInput {
 
   benchmarkId: string;
   benchmarkName: string;
+  benchmarkTicker: string;
+  benchmarkExchangeMic: string;
+  benchmarkQuoteCurrency: string;
   benchmarkEntryPrice: number;
 
   thesis: string;
@@ -155,6 +161,17 @@ function validateInput(
   if (!input.companyName.trim()) {
     throw new Error("A company name is required.");
   }
+  if (!input.exchangeMic.trim()) {
+    throw new Error(
+      "A company exchange MIC is required.",
+    );
+  }
+
+  if (!input.quoteCurrency.trim()) {
+    throw new Error(
+      "A company quote currency is required.",
+    );
+  }
 
   if (!input.benchmarkId.trim()) {
     throw new Error("A benchmark ID is required.");
@@ -163,6 +180,27 @@ function validateInput(
   if (!input.benchmarkName.trim()) {
     throw new Error(
       "A benchmark name is required.",
+    );
+  }
+  if (!input.benchmarkTicker.trim()) {
+    throw new Error(
+      "A benchmark ticker is required.",
+    );
+  }
+
+  if (
+    !input.benchmarkExchangeMic.trim()
+  ) {
+    throw new Error(
+      "A benchmark exchange MIC is required.",
+    );
+  }
+
+  if (
+    !input.benchmarkQuoteCurrency.trim()
+  ) {
+    throw new Error(
+      "A benchmark quote currency is required.",
     );
   }
 
@@ -215,7 +253,18 @@ export function buildSelectionOutcomeRecord(
       ticker: input.ticker
         .trim()
         .toUpperCase(),
-      companyName: input.companyName.trim(),
+      companyName:
+        input.companyName.trim(),
+
+      exchangeMic:
+        input.exchangeMic
+          .trim()
+          .toUpperCase(),
+
+      quoteCurrency:
+        input.quoteCurrency
+          .trim()
+          .toUpperCase(),
 
       decision: input.decision,
       selectedAt,
@@ -231,9 +280,27 @@ export function buildSelectionOutcomeRecord(
       themeScore: input.themeScore,
       themeConfidence: input.themeConfidence,
 
-      benchmarkId: input.benchmarkId.trim(),
+      benchmarkId:
+        input.benchmarkId.trim(),
+
       benchmarkName:
         input.benchmarkName.trim(),
+
+      benchmarkTicker:
+        input.benchmarkTicker
+          .trim()
+          .toUpperCase(),
+
+      benchmarkExchangeMic:
+        input.benchmarkExchangeMic
+          .trim()
+          .toUpperCase(),
+
+      benchmarkQuoteCurrency:
+        input.benchmarkQuoteCurrency
+          .trim()
+          .toUpperCase(),
+
       benchmarkEntryPrice:
         input.benchmarkEntryPrice,
 

@@ -18,6 +18,8 @@ interface SelectionSnapshotRow {
   company_id: string;
   ticker: string;
   company_name: string;
+  exchange_mic: string | null;
+  quote_currency: string | null;
 
   decision: SelectionDecision;
   selected_at: string;
@@ -35,6 +37,13 @@ interface SelectionSnapshotRow {
 
   benchmark_id: string;
   benchmark_name: string;
+  benchmark_ticker: string | null;
+
+  benchmark_exchange_mic:
+    string | null;
+
+  benchmark_quote_currency:
+    string | null;
   benchmark_entry_price: number;
 
   thesis: string;
@@ -74,7 +83,7 @@ interface OutcomeExplanationRow {
   unexpected_events: string[];
   lessons: string[];
 
-    confidence_adjustment: number;
+  confidence_adjustment: number;
   generated_at: string;
 }
 
@@ -105,6 +114,11 @@ function mapSelectionSnapshot(
     companyId: row.company_id,
     ticker: row.ticker,
     companyName: row.company_name,
+    exchangeMic:
+      row.exchange_mic ?? undefined,
+
+    quoteCurrency:
+      row.quote_currency ?? undefined,
 
     decision: row.decision,
     selectedAt: row.selected_at,
@@ -123,6 +137,17 @@ function mapSelectionSnapshot(
 
     benchmarkId: row.benchmark_id,
     benchmarkName: row.benchmark_name,
+    benchmarkTicker:
+      row.benchmark_ticker ??
+      undefined,
+
+    benchmarkExchangeMic:
+      row.benchmark_exchange_mic ??
+      undefined,
+
+    benchmarkQuoteCurrency:
+      row.benchmark_quote_currency ??
+      undefined,
     benchmarkEntryPrice:
       row.benchmark_entry_price,
 
@@ -138,10 +163,10 @@ function mapHorizonOutcome(
     horizon: row.horizon,
     measurementDate: row.measurement_date,
 
-   companyReviewPrice:
-  row.company_price ?? undefined,
-benchmarkReviewPrice:
-  row.benchmark_price ?? undefined,
+    companyReviewPrice:
+      row.company_price ?? undefined,
+    benchmarkReviewPrice:
+      row.benchmark_price ?? undefined,
 
     companyReturn:
       row.company_return ?? undefined,
@@ -207,13 +232,15 @@ function mapOutcomeReview(
 }
 
 export async function getSelectionOutcomeRecords():
-Promise<SelectionOutcomeRecord[]> {
+  Promise<SelectionOutcomeRecord[]> {
   const selectionRows = await sql`
     SELECT
       selection_id,
       company_id,
       ticker,
       company_name,
+      exchange_mic,
+      quote_currency,
       decision,
       selected_at::text AS selected_at,
       entry_price::double precision AS entry_price,
@@ -228,6 +255,9 @@ Promise<SelectionOutcomeRecord[]> {
         AS theme_confidence,
       benchmark_id,
       benchmark_name,
+      benchmark_ticker,
+      benchmark_exchange_mic,
+      benchmark_quote_currency,
       benchmark_entry_price::double precision
         AS benchmark_entry_price,
       thesis,
@@ -257,20 +287,20 @@ Promise<SelectionOutcomeRecord[]> {
   `;
 
   const explanationRows = await sql`
-  SELECT
-    selection_id,
-    horizon,
-    summary,
-    prediction_was_correct,
-    primary_cause,
-    supporting_factors,
-    contradictory_factors,
-    unexpected_events,
-    lessons,
-    confidence_adjustment,
-    generated_at::text AS generated_at
-  FROM selection_horizon_outcome_explanations;
-`;
+    SELECT
+      selection_id,
+      horizon,
+      summary,
+      prediction_was_correct,
+      primary_cause,
+      supporting_factors,
+      contradictory_factors,
+      unexpected_events,
+      lessons,
+      confidence_adjustment,
+      generated_at::text AS generated_at
+    FROM selection_horizon_outcome_explanations;
+  `;
 
   const reviewRows = await sql`
     SELECT
@@ -284,54 +314,54 @@ Promise<SelectionOutcomeRecord[]> {
       lessons
     FROM selection_outcome_reviews;
   `;
-const explanationsByOutcome = new Map<
-  string,
-  OutcomeExplanation
->();
+  const explanationsByOutcome = new Map<
+    string,
+    OutcomeExplanation
+  >();
 
-for (
-  const row of
-    explanationRows as OutcomeExplanationRow[]
-) {
-  explanationsByOutcome.set(
-    getOutcomeKey(
-      row.selection_id,
-      row.horizon,
-    ),
-    mapOutcomeExplanation(row),
-  );
-}
+  for (
+    const row of
+      explanationRows as OutcomeExplanationRow[]
+  ) {
+    explanationsByOutcome.set(
+      getOutcomeKey(
+        row.selection_id,
+        row.horizon,
+      ),
+      mapOutcomeExplanation(row),
+    );
+  }
   const outcomesBySelection = new Map<
     string,
     HorizonOutcome[]
   >();
 
   for (const row of outcomeRows as HorizonOutcomeRow[]) {
-  const outcomes =
-    outcomesBySelection.get(row.selection_id) ?? [];
+    const outcomes =
+      outcomesBySelection.get(row.selection_id) ?? [];
 
-  const outcome = mapHorizonOutcome(row);
+    const outcome = mapHorizonOutcome(row);
 
-  const outcomeExplanation =
-    explanationsByOutcome.get(
-      getOutcomeKey(
-        row.selection_id,
-        row.horizon,
-      ),
+    const outcomeExplanation =
+      explanationsByOutcome.get(
+        getOutcomeKey(
+          row.selection_id,
+          row.horizon,
+        ),
+      );
+
+    outcomes.push({
+      ...outcome,
+      ...(outcomeExplanation
+        ? { outcomeExplanation }
+        : {}),
+    });
+
+    outcomesBySelection.set(
+      row.selection_id,
+      outcomes,
     );
-
-  outcomes.push({
-    ...outcome,
-    ...(outcomeExplanation
-      ? { outcomeExplanation }
-      : {}),
-  });
-
-  outcomesBySelection.set(
-    row.selection_id,
-    outcomes,
-  );
-}
+  }
 
   const reviewsBySelection = new Map<
     string,
@@ -397,6 +427,8 @@ export async function saveSelectionSnapshot(
       company_id,
       ticker,
       company_name,
+      exchange_mic,
+      quote_currency,
       decision,
       selected_at,
       entry_price,
@@ -410,6 +442,9 @@ export async function saveSelectionSnapshot(
       theme_confidence,
       benchmark_id,
       benchmark_name,
+      benchmark_ticker,
+      benchmark_exchange_mic,
+      benchmark_quote_currency,
       benchmark_entry_price,
       thesis,
       risks
@@ -419,6 +454,8 @@ export async function saveSelectionSnapshot(
       ${selection.companyId},
       ${selection.ticker},
       ${selection.companyName},
+      ${selection.exchangeMic ?? null},
+      ${selection.quoteCurrency ?? null},
       ${selection.decision},
       ${selection.selectedAt},
       ${selection.entryPrice},
@@ -432,6 +469,9 @@ export async function saveSelectionSnapshot(
       ${selection.themeConfidence ?? null},
       ${selection.benchmarkId},
       ${selection.benchmarkName},
+      ${selection.benchmarkTicker ?? null},
+      ${selection.benchmarkExchangeMic ?? null},
+      ${selection.benchmarkQuoteCurrency ?? null},
       ${selection.benchmarkEntryPrice},
       ${selection.thesis},
       ${selection.risks}
@@ -612,19 +652,19 @@ export async function saveSelectionOutcomeRecord(
     await saveSelectionSnapshot(record.selection);
 
   for (const outcome of record.outcomes) {
-  await saveHorizonOutcome(
-    record.selection.selectionId,
-    outcome,
-  );
-
-  if (outcome.outcomeExplanation) {
-    await saveOutcomeExplanation(
+    await saveHorizonOutcome(
       record.selection.selectionId,
-      outcome.horizon,
-      outcome.outcomeExplanation,
+      outcome,
     );
+
+    if (outcome.outcomeExplanation) {
+      await saveOutcomeExplanation(
+        record.selection.selectionId,
+        outcome.horizon,
+        outcome.outcomeExplanation,
+      );
+    }
   }
-}
 
   if (record.review) {
     await saveOutcomeReview(

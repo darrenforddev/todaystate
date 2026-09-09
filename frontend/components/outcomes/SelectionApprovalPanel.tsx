@@ -15,6 +15,8 @@ interface SelectionCandidate {
   companyId: string;
   ticker: string;
   companyName: string;
+  exchangeMic: string;
+  quoteCurrency: string;
 
   todayScore: number;
   qualityScore: number;
@@ -56,7 +58,12 @@ export default function SelectionApprovalPanel({
 
   const [entryPrice, setEntryPrice] = useState("");
   const [benchmarkId, setBenchmarkId] = useState("sp500");
-  const [benchmarkName, setBenchmarkName] = useState("S&P 500");
+  const [benchmarkName, setBenchmarkName] = useState("SPDR S&P 500 ETF Trust");
+  const [benchmarkTicker, setBenchmarkTicker] = useState("SPY");
+
+  const [benchmarkExchangeMic, setBenchmarkExchangeMic] = useState("ARCX");
+
+  const [benchmarkQuoteCurrency, setBenchmarkQuoteCurrency] = useState("USD");
   const [benchmarkEntryPrice, setBenchmarkEntryPrice] = useState("");
 
   const [thesis, setThesis] = useState("");
@@ -94,6 +101,18 @@ export default function SelectionApprovalPanel({
       messages.push("Enter a benchmark name.");
     }
 
+    if (!benchmarkTicker.trim()) {
+      messages.push("Enter a benchmark ticker.");
+    }
+
+    if (!benchmarkExchangeMic.trim()) {
+      messages.push("Enter a benchmark exchange MIC.");
+    }
+
+    if (!benchmarkQuoteCurrency.trim()) {
+      messages.push("Enter a benchmark quote currency.");
+    }
+
     if (parsedBenchmarkEntryPrice === undefined) {
       messages.push("Enter a benchmark price greater than zero.");
     }
@@ -112,6 +131,9 @@ export default function SelectionApprovalPanel({
     parsedEntryPrice,
     benchmarkId,
     benchmarkName,
+    benchmarkTicker,
+    benchmarkExchangeMic,
+    benchmarkQuoteCurrency,
     parsedBenchmarkEntryPrice,
     thesis,
     risks,
@@ -130,6 +152,9 @@ export default function SelectionApprovalPanel({
       companyId: candidate.companyId,
       ticker: candidate.ticker,
       companyName: candidate.companyName,
+      exchangeMic: candidate.exchangeMic,
+
+      quoteCurrency: candidate.quoteCurrency,
 
       decision,
       selectedAt,
@@ -147,6 +172,11 @@ export default function SelectionApprovalPanel({
 
       benchmarkId: benchmarkId.trim(),
       benchmarkName: benchmarkName.trim(),
+      benchmarkTicker: benchmarkTicker.trim().toUpperCase(),
+
+      benchmarkExchangeMic: benchmarkExchangeMic.trim().toUpperCase(),
+
+      benchmarkQuoteCurrency: benchmarkQuoteCurrency.trim().toUpperCase(),
       benchmarkEntryPrice: parsedBenchmarkEntryPrice,
 
       thesis: thesis.trim(),
@@ -160,6 +190,9 @@ export default function SelectionApprovalPanel({
     benchmarkId,
     benchmarkName,
     parsedBenchmarkEntryPrice,
+    benchmarkTicker,
+    benchmarkExchangeMic,
+    benchmarkQuoteCurrency,
     thesis,
     risks,
     validationMessages.length,
@@ -237,22 +270,33 @@ export default function SelectionApprovalPanel({
               setBenchmarkId(nextId);
 
               if (nextId === "sp500") {
-                setBenchmarkName("S&P 500");
+                setBenchmarkName("SPDR S&P 500 ETF Trust");
+                setBenchmarkTicker("SPY");
+                setBenchmarkExchangeMic("ARCX");
+                setBenchmarkQuoteCurrency("USD");
               }
 
               if (nextId === "ftse100") {
-                setBenchmarkName("FTSE 100");
+                setBenchmarkName("iShares Core FTSE 100 UCITS ETF");
+                setBenchmarkTicker("ISF");
+                setBenchmarkExchangeMic("XLON");
+                setBenchmarkQuoteCurrency("GBX");
               }
 
               if (nextId === "nasdaq100") {
-                setBenchmarkName("Nasdaq 100");
+                setBenchmarkName("Invesco QQQ Trust");
+                setBenchmarkTicker("QQQ");
+                setBenchmarkExchangeMic("XNAS");
+                setBenchmarkQuoteCurrency("USD");
               }
             }}
             className={inputClassName}
           >
-            <option value="sp500">S&amp;P 500</option>
-            <option value="ftse100">FTSE 100</option>
-            <option value="nasdaq100">Nasdaq 100</option>
+            <option value="sp500">S&amp;P 500 — SPY</option>
+
+            <option value="ftse100">FTSE 100 — ISF</option>
+
+            <option value="nasdaq100">Nasdaq 100 — QQQ</option>
           </select>
         </Field>
 

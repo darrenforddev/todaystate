@@ -4,6 +4,7 @@ import type {
 } from "@/engine/outcomes/types";
 
 import OutcomeExplanationCard from "./OutcomeExplanationCard";
+import OutcomeReplayChart from "./OutcomeReplayChart";
 
 interface OutcomeTimelineProps {
   record: SelectionOutcomeRecord;
@@ -127,6 +128,63 @@ export default function OutcomeTimeline({ record }: OutcomeTimelineProps) {
           );
         })}
       </div>
+      {outcomes.some((outcome) => outcome.status !== "pending") && (
+        <div className="mt-7 rounded-2xl border border-cyan-400/15 bg-slate-950/30 p-5">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">
+              Visual outcome replay
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              View the complete adjusted-price chart for each reviewed horizon,
+              including the company and its benchmark.
+            </p>
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {outcomes.map((outcome) =>
+              outcome.status !== "pending" ? (
+                <div
+                  key={outcome.horizon}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-white">
+                        {horizonLabels[outcome.horizon]} outcome
+                      </p>
+
+                      <p className="mt-1 text-xs capitalize text-slate-500">
+                        {outcome.status}
+                        {" · "}
+                        {formatReturn(outcome.relativeReturn)} relative
+                      </p>
+                    </div>
+
+                    <span
+                      className={`rounded-full border px-3 py-1 text-xs font-bold capitalize ${
+                        outcome.status === "successful"
+                          ? "border-emerald-400/25 bg-emerald-400/[0.07] text-emerald-300"
+                          : outcome.status === "unsuccessful"
+                            ? "border-rose-400/25 bg-rose-400/[0.07] text-rose-300"
+                            : "border-amber-300/25 bg-amber-300/[0.07] text-amber-200"
+                      }`}
+                    >
+                      {outcome.status}
+                    </span>
+                  </div>
+
+                  <OutcomeReplayChart
+                    selectionId={selection.selectionId}
+                    horizon={outcome.horizon}
+                    status={outcome.status}
+                  />
+                </div>
+              ) : null,
+            )}
+          </div>
+        </div>
+      )}
 
       {outcomes.some((outcome) => Boolean(outcome.outcomeExplanation)) && (
         <div className="mt-7 space-y-4">

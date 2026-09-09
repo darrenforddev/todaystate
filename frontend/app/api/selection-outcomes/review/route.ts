@@ -12,15 +12,12 @@ import {
 } from "@/engine/outcomes/outcomeExplanation";
 
 import {
-  buildOutcomeReviewEvidence,
-} from "@/engine/outcomes/outcomeReviewEvidence";
-
-import {
   saveOutcomeExplanation,
 } from "@/engine/outcomes/selectionOutcomeRepository";
 
 import type {
   OutcomeExplanationCause,
+  OutcomeExplanationFactor,
 } from "@/engine/outcomes/types";
 
 import {
@@ -403,22 +400,40 @@ export async function PATCH(request: Request) {
       );
     }
 
-        const {
-      supportingFactors,
-      contradictoryFactors,
-    } = buildOutcomeReviewEvidence({
-      status:
-        review.status,
+    const reviewedFactorImpact =
+      review.status === "successful" ||
+      (review.status === "inconclusive" &&
+        review.relativeReturn > 0)
+        ? "supportive"
+        : review.status === "unsuccessful" ||
+            (review.status === "inconclusive" &&
+              review.relativeReturn < 0)
+          ? "contradictory"
+          : null;
 
-      relativeReturn:
-        review.relativeReturn,
+    const reviewedFactor:
+      OutcomeExplanationFactor | null =
+        explanationCause !==
+          "insufficient-evidence" &&
+        explanationNotes &&
+        reviewedFactorImpact
+          ? {
+              cause: explanationCause,
+              impact: reviewedFactorImpact,
+              title: "Outcome review evidence",
+              explanation: explanationNotes,
+            }
+          : null;
 
-      cause:
-        explanationCause,
+    const supportingFactors =
+      reviewedFactor?.impact === "supportive"
+        ? [reviewedFactor]
+        : [];
 
-      notes:
-        explanationNotes,
-    });
+    const contradictoryFactors =
+      reviewedFactor?.impact === "contradictory"
+        ? [reviewedFactor]
+        : [];
 
     const outcomeExplanation =
       generateOutcomeExplanation({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import RecordSelectionButton from "./RecordSelectionButton";
 
@@ -34,6 +34,19 @@ interface SelectionApprovalPanelProps {
   onRecorded?: (record: SelectionOutcomeRecord) => void;
 }
 
+interface HistoricalPriceResponse {
+  marketDate: string;
+  close: number;
+  providerName: string;
+}
+
+interface ApprovalPricesApiResponse {
+  success: boolean;
+  companyPrice?: HistoricalPriceResponse;
+  benchmarkPrice?: HistoricalPriceResponse;
+  error?: string;
+}
+
 function getTodayDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -46,6 +59,35 @@ function parsePositiveNumber(value: string): number | undefined {
   }
 
   return parsed;
+}
+
+function formatPrice(value: string, currency: string): string | null {
+  const price = parsePositiveNumber(value);
+
+  if (price === undefined) {
+    return null;
+  }
+
+  switch (currency.trim().toUpperCase()) {
+    case "GBX":
+      return `${price.toFixed(2)}p (£${(price / 100).toFixed(2)})`;
+
+    case "GBP":
+      return `£${price.toFixed(2)}`;
+
+    case "USD":
+      return `$${price.toFixed(2)}`;
+
+    case "EUR":
+      return `€${price.toFixed(2)}`;
+
+    default:
+      return `${price.toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}
+
+function formatPriceInput(value: number): string {
+  return String(Math.round(value * 10_000) / 10_000);
 }
 
 export default function SelectionApprovalPanel({
@@ -66,8 +108,91 @@ export default function SelectionApprovalPanel({
   const [benchmarkQuoteCurrency, setBenchmarkQuoteCurrency] = useState("USD");
   const [benchmarkEntryPrice, setBenchmarkEntryPrice] = useState("");
 
+  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+  const [priceMessage, setPriceMessage] = useState("");
+  const [priceWarning, setPriceWarning] = useState("");
+
   const [thesis, setThesis] = useState("");
   const [risksText, setRisksText] = useState("");
+
+  useEffect(() => {
+    setEntryPrice("");
+    setBenchmarkEntryPrice("");
+    setPriceMessage("");
+    setPriceWarning("");
+
+    if (!selectedAt || !benchmarkId) {
+      setIsLoadingPrices(false);
+      return;
+    }
+
+    const companyToLoad = candidate;
+    const benchmarkIdToLoad = benchmarkId;
+    const selectedDateToLoad = selectedAt;
+    const controller = new AbortController();
+
+    async function loadApprovalPrices(): Promise<void> {
+      setIsLoadingPrices(true);
+
+      try {
+        const parameters = new URLSearchParams({
+          companyId: companyToLoad.companyId,
+          benchmarkId: benchmarkIdToLoad,
+          selectedAt: selectedDateToLoad,
+        });
+
+        const response = await fetch(
+          `/api/selection-outcomes/approval-prices?${parameters.toString()}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        const result = (await response.json()) as ApprovalPricesApiResponse;
+
+        if (
+          !response.ok ||
+          !result.success ||
+          !result.companyPrice ||
+          !result.benchmarkPrice
+        ) {
+          throw new Error(
+            result.error ?? "Automatic entry prices could not be loaded.",
+          );
+        }
+
+        setEntryPrice(formatPriceInput(result.companyPrice.close));
+        setBenchmarkEntryPrice(formatPriceInput(result.benchmarkPrice.close));
+        setPriceMessage(
+          `Prices loaded from ${result.companyPrice.providerName}. ` +
+            `${companyToLoad.ticker}: ${result.companyPrice.marketDate}; ` +
+            `${benchmarkTicker}: ${result.benchmarkPrice.marketDate}.`,
+        );
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
+        setPriceWarning(
+          (error instanceof Error
+            ? error.message
+            : "Automatic entry prices could not be loaded.") +
+            " Enter the two prices manually.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingPrices(false);
+        }
+      }
+    }
+
+    void loadApprovalPrices();
+
+    return () => {
+      controller.abort();
+    };
+  }, [candidate, selectedAt, benchmarkId, benchmarkTicker]);
 
   const risks = useMemo(
     () =>
@@ -210,8 +335,9 @@ export default function SelectionApprovalPanel({
         </h2>
 
         <p className="mt-2 text-sm text-slate-400">
-          Review the evidence and complete the decision details before creating
-          a permanent outcome snapshot.
+          Review the evidence and decision details before creating a permanent
+          outcome snapshot. Market entry prices are retrieved automatically when
+          provider coverage is available.
         </p>
       </div>
 
@@ -221,6 +347,24 @@ export default function SelectionApprovalPanel({
         <Score label="Value" value={candidate.valueScore} />
         <Score label="Momentum" value={candidate.momentumScore} />
       </div>
+
+      {isLoadingPrices && (
+        <p className="mt-6 rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-3 text-sm text-cyan-200">
+          Retrieving company and benchmark entry prices…
+        </p>
+      )}
+
+      {!isLoadingPrices && priceMessage && (
+        <p className="mt-6 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.07] px-4 py-3 text-sm text-emerald-300">
+          {priceMessage}
+        </p>
+      )}
+
+      {!isLoadingPrices && priceWarning && (
+        <p className="mt-6 rounded-xl border border-amber-300/25 bg-amber-300/[0.07] px-4 py-3 text-sm leading-6 text-amber-200">
+          {priceWarning}
+        </p>
+      )}
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <Field label="Decision">
@@ -256,9 +400,17 @@ export default function SelectionApprovalPanel({
             onChange={(event) => {
               setEntryPrice(event.target.value);
             }}
-            placeholder="For example, 420.00"
-            className={inputClassName}
+            placeholder={
+              isLoadingPrices ? "Loading market price…" : "Enter company price"
+            }
+            disabled={isLoadingPrices}
+            className={`${inputClassName} disabled:cursor-wait disabled:opacity-60`}
           />
+          {formatPrice(entryPrice, candidate.quoteCurrency) && (
+            <p className="mt-2 text-xs font-semibold text-cyan-300">
+              Display value: {formatPrice(entryPrice, candidate.quoteCurrency)}
+            </p>
+          )}
         </Field>
 
         <Field label="Benchmark">
@@ -320,9 +472,20 @@ export default function SelectionApprovalPanel({
             onChange={(event) => {
               setBenchmarkEntryPrice(event.target.value);
             }}
-            placeholder="For example, 6350.00"
-            className={inputClassName}
+            placeholder={
+              isLoadingPrices
+                ? "Loading market price…"
+                : "Enter benchmark price"
+            }
+            disabled={isLoadingPrices}
+            className={`${inputClassName} disabled:cursor-wait disabled:opacity-60`}
           />
+          {formatPrice(benchmarkEntryPrice, benchmarkQuoteCurrency) && (
+            <p className="mt-2 text-xs font-semibold text-cyan-300">
+              Display value:{" "}
+              {formatPrice(benchmarkEntryPrice, benchmarkQuoteCurrency)}
+            </p>
+          )}
         </Field>
       </div>
 

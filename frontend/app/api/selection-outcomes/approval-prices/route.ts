@@ -10,40 +10,16 @@ import {
 } from "@/engine/outcomes/historicalClose";
 
 import {
+  getSelectionBenchmark,
+} from "@/engine/outcomes/selectionBenchmarks";
+
+import {
   twelveDataLseTrialCompany,
 } from "@/engine/todayScore/providers/twelveData";
 
 import type {
   ProviderCompanyIdentity,
 } from "@/engine/todayScore/providers/types";
-
-const BENCHMARKS: Record<
-  string,
-  ProviderCompanyIdentity
-> = {
-  sp500: {
-    companyId: "sp500",
-    companyName:
-      "SPDR S&P 500 ETF Trust",
-    ticker: "SPY",
-    exchangeMic: "ARCX",
-  },
-
-  ftse100: {
-    companyId: "ftse100",
-    companyName:
-      "iShares Core FTSE 100 UCITS ETF",
-    ticker: "ISF",
-    exchangeMic: "XLON",
-  },
-
-  nasdaq100: {
-    companyId: "nasdaq100",
-    companyName: "Invesco QQQ Trust",
-    ticker: "QQQ",
-    exchangeMic: "XNAS",
-  },
-};
 
 function isValidDate(
   value: string,
@@ -138,8 +114,10 @@ export async function GET(
     );
   }
 
-  const benchmark =
-    BENCHMARKS[benchmarkId];
+ const benchmark =
+    getSelectionBenchmark(
+      benchmarkId,
+    );
 
   if (!benchmark) {
     return NextResponse.json(
@@ -159,7 +137,7 @@ export async function GET(
       await fetchHistoricalClose(
         company,
         selectedAt,
-       "at-or-before",
+        "at-or-before",
       );
 
     const benchmarkPrice =

@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import RecordSelectionButton from "./RecordSelectionButton";
 
+import {
+  getDefaultBenchmarkId,
+  getSelectionBenchmark,
+} from "@/engine/outcomes/selectionBenchmarks";
+
 import type { ApprovedSelectionInput } from "@/engine/outcomes/selectionOutcomeBuilder";
 
 import type {
@@ -94,18 +99,30 @@ export default function SelectionApprovalPanel({
   candidate,
   onRecorded,
 }: SelectionApprovalPanelProps) {
+  const defaultBenchmarkId = getDefaultBenchmarkId(candidate.exchangeMic);
+
+  const defaultBenchmark = getSelectionBenchmark(defaultBenchmarkId)!;
+
   const [decision, setDecision] = useState<SelectionDecision>("long");
 
   const [selectedAt, setSelectedAt] = useState(getTodayDate);
 
   const [entryPrice, setEntryPrice] = useState("");
-  const [benchmarkId, setBenchmarkId] = useState("sp500");
-  const [benchmarkName, setBenchmarkName] = useState("SPDR S&P 500 ETF Trust");
-  const [benchmarkTicker, setBenchmarkTicker] = useState("SPY");
+  const [benchmarkId, setBenchmarkId] = useState<string>(defaultBenchmarkId);
+  const [benchmarkName, setBenchmarkName] = useState(
+    defaultBenchmark.companyName,
+  );
+  const [benchmarkTicker, setBenchmarkTicker] = useState(
+    defaultBenchmark.ticker,
+  );
 
-  const [benchmarkExchangeMic, setBenchmarkExchangeMic] = useState("ARCX");
+  const [benchmarkExchangeMic, setBenchmarkExchangeMic] = useState(
+    defaultBenchmark.exchangeMic,
+  );
 
-  const [benchmarkQuoteCurrency, setBenchmarkQuoteCurrency] = useState("USD");
+  const [benchmarkQuoteCurrency, setBenchmarkQuoteCurrency] = useState(
+    defaultBenchmark.quoteCurrency,
+  );
   const [benchmarkEntryPrice, setBenchmarkEntryPrice] = useState("");
 
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
@@ -418,29 +435,17 @@ export default function SelectionApprovalPanel({
             value={benchmarkId}
             onChange={(event) => {
               const nextId = event.target.value;
+              const nextBenchmark = getSelectionBenchmark(nextId);
+
+              if (!nextBenchmark) {
+                return;
+              }
 
               setBenchmarkId(nextId);
-
-              if (nextId === "sp500") {
-                setBenchmarkName("SPDR S&P 500 ETF Trust");
-                setBenchmarkTicker("SPY");
-                setBenchmarkExchangeMic("ARCX");
-                setBenchmarkQuoteCurrency("USD");
-              }
-
-              if (nextId === "ftse100") {
-                setBenchmarkName("iShares Core FTSE 100 UCITS ETF");
-                setBenchmarkTicker("ISF");
-                setBenchmarkExchangeMic("XLON");
-                setBenchmarkQuoteCurrency("GBX");
-              }
-
-              if (nextId === "nasdaq100") {
-                setBenchmarkName("Invesco QQQ Trust");
-                setBenchmarkTicker("QQQ");
-                setBenchmarkExchangeMic("XNAS");
-                setBenchmarkQuoteCurrency("USD");
-              }
+              setBenchmarkName(nextBenchmark.companyName);
+              setBenchmarkTicker(nextBenchmark.ticker);
+              setBenchmarkExchangeMic(nextBenchmark.exchangeMic);
+              setBenchmarkQuoteCurrency(nextBenchmark.quoteCurrency);
             }}
             className={inputClassName}
           >
@@ -450,17 +455,6 @@ export default function SelectionApprovalPanel({
 
             <option value="nasdaq100">Nasdaq 100 — QQQ</option>
           </select>
-        </Field>
-
-        <Field label="Benchmark name">
-          <input
-            type="text"
-            value={benchmarkName}
-            onChange={(event) => {
-              setBenchmarkName(event.target.value);
-            }}
-            className={inputClassName}
-          />
         </Field>
 
         <Field label="Benchmark entry price">

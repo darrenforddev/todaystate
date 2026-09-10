@@ -9,6 +9,8 @@ import {
   getSelectionBenchmark,
 } from "@/engine/outcomes/selectionBenchmarks";
 
+import { buildSelectionApprovalDraft } from "@/engine/outcomes/selectionApprovalDraft";
+
 import type { ApprovedSelectionInput } from "@/engine/outcomes/selectionOutcomeBuilder";
 
 import type {
@@ -125,12 +127,46 @@ export default function SelectionApprovalPanel({
   );
   const [benchmarkEntryPrice, setBenchmarkEntryPrice] = useState("");
 
+  const initialDraft = buildSelectionApprovalDraft({
+    ticker: candidate.ticker,
+    companyName: candidate.companyName,
+    decision: "long",
+    todayScore: candidate.todayScore,
+    qualityScore: candidate.qualityScore,
+    valueScore: candidate.valueScore,
+    momentumScore: candidate.momentumScore,
+    benchmarkTicker: defaultBenchmark.ticker,
+    themeName: candidate.themeName,
+    themeConfidence: candidate.themeConfidence,
+  });
+
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
   const [priceMessage, setPriceMessage] = useState("");
   const [priceWarning, setPriceWarning] = useState("");
 
-  const [thesis, setThesis] = useState("");
-  const [risksText, setRisksText] = useState("");
+  const [thesis, setThesis] = useState(initialDraft.thesis);
+  const [risksText, setRisksText] = useState(initialDraft.risks.join("\n"));
+
+  function applyApprovalDraft(
+    nextDecision: SelectionDecision,
+    nextBenchmarkTicker: string,
+  ): void {
+    const nextDraft = buildSelectionApprovalDraft({
+      ticker: candidate.ticker,
+      companyName: candidate.companyName,
+      decision: nextDecision,
+      todayScore: candidate.todayScore,
+      qualityScore: candidate.qualityScore,
+      valueScore: candidate.valueScore,
+      momentumScore: candidate.momentumScore,
+      benchmarkTicker: nextBenchmarkTicker,
+      themeName: candidate.themeName,
+      themeConfidence: candidate.themeConfidence,
+    });
+
+    setThesis(nextDraft.thesis);
+    setRisksText(nextDraft.risks.join("\n"));
+  }
 
   useEffect(() => {
     setEntryPrice("");
@@ -388,7 +424,10 @@ export default function SelectionApprovalPanel({
           <select
             value={decision}
             onChange={(event) => {
-              setDecision(event.target.value as SelectionDecision);
+              const nextDecision = event.target.value as SelectionDecision;
+
+              setDecision(nextDecision);
+              applyApprovalDraft(nextDecision, benchmarkTicker);
             }}
             className={inputClassName}
           >
@@ -446,6 +485,7 @@ export default function SelectionApprovalPanel({
               setBenchmarkTicker(nextBenchmark.ticker);
               setBenchmarkExchangeMic(nextBenchmark.exchangeMic);
               setBenchmarkQuoteCurrency(nextBenchmark.quoteCurrency);
+              applyApprovalDraft(decision, nextBenchmark.ticker);
             }}
             className={inputClassName}
           >

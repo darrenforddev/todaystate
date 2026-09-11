@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import CompanyLogo from "@/components/company/CompanyLogo";
+import SelectionApprovalPanel from "@/components/outcomes/SelectionApprovalPanel";
+import { realCompanyUniverse } from "@/data/realCompanyUniverse";
 import type {
   ScreenerDecision,
   ThemeAlignment,
@@ -232,7 +234,9 @@ function PillarSection({
             className="rounded-2xl border border-slate-800 bg-[#020817] p-4"
           >
             <p className="text-xs text-slate-500">{category.label}</p>
-            <p className={`mt-2 text-2xl font-black ${scoreColour(category.score)}`}>
+            <p
+              className={`mt-2 text-2xl font-black ${scoreColour(category.score)}`}
+            >
               {category.score}
             </p>
           </div>
@@ -252,6 +256,38 @@ export default function TodayScoreCompanyReport({
   const { company, coverage, dataWarnings } = report;
   const { result } = company;
   const { todayScore, breakdown, classification, explanation } = result;
+  const registeredCompany = realCompanyUniverse.find(
+    (candidate) => candidate.companyId === company.companyId,
+  );
+
+  const approvalCandidate =
+    registeredCompany && company.decision !== "watch"
+      ? {
+          companyId: registeredCompany.companyId,
+
+          ticker: registeredCompany.ticker,
+
+          companyName: registeredCompany.companyName,
+
+          exchangeMic: registeredCompany.exchangeMic,
+
+          quoteCurrency: registeredCompany.quoteCurrency,
+
+          todayScore: todayScore.score,
+
+          qualityScore: todayScore.quality,
+
+          valueScore: todayScore.value,
+
+          momentumScore: todayScore.momentum,
+
+          themeId: company.themeId,
+
+          themeName: company.themeName,
+
+          themeConfidence: company.themeConfidence,
+        }
+      : null;
 
   return (
     <div className="min-h-screen bg-[#020817] px-5 py-10 text-white md:px-10 xl:px-12">
@@ -286,7 +322,8 @@ export default function TodayScoreCompanyReport({
                 {company.companyName}
               </h1>
               <p className="mt-3 text-sm text-slate-400">
-                {company.sector} · {company.industry} · Global comparison universe
+                {company.sector} · {company.industry} · Global comparison
+                universe
               </p>
             </div>
           </div>
@@ -319,7 +356,11 @@ export default function TodayScoreCompanyReport({
           </div>
           <ScoreRing label="Quality" score={todayScore.quality} weight="40%" />
           <ScoreRing label="Value" score={todayScore.value} weight="30%" />
-          <ScoreRing label="Momentum" score={todayScore.momentum} weight="30%" />
+          <ScoreRing
+            label="Momentum"
+            score={todayScore.momentum}
+            weight="30%"
+          />
         </section>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)]">
@@ -328,7 +369,9 @@ export default function TodayScoreCompanyReport({
               Why this classification
             </p>
             <h2 className="mt-2 text-2xl font-black">Explainable TodayScore</h2>
-            <p className="mt-4 leading-7 text-slate-300">{explanation.summary}</p>
+            <p className="mt-4 leading-7 text-slate-300">
+              {explanation.summary}
+            </p>
             <p className="mt-3 text-sm leading-6 text-slate-500">
               {classification.description}
             </p>
@@ -390,7 +433,9 @@ export default function TodayScoreCompanyReport({
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
                     MBIE alignment
                   </p>
-                  <h2 className="mt-2 text-xl font-black">{company.themeName}</h2>
+                  <h2 className="mt-2 text-xl font-black">
+                    {company.themeName}
+                  </h2>
                 </div>
                 <span
                   className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase ${alignmentStyles[company.themeAlignment]}`}
@@ -440,7 +485,10 @@ export default function TodayScoreCompanyReport({
             score={breakdown.quality.score}
             coverage={`${coverage.quality.available}/${coverage.quality.expected}`}
             categories={[
-              { label: "Profitability", score: breakdown.quality.profitability },
+              {
+                label: "Profitability",
+                score: breakdown.quality.profitability,
+              },
               {
                 label: "Financial strength",
                 score: breakdown.quality.financialStrength,
@@ -500,6 +548,28 @@ export default function TodayScoreCompanyReport({
           />
         </div>
 
+        {approvalCandidate ? (
+          <div className="mt-6">
+            <SelectionApprovalPanel
+              key={approvalCandidate.companyId}
+              candidate={approvalCandidate}
+              initialDecision={company.decision === "short" ? "short" : "long"}
+            />
+          </div>
+        ) : (
+          <section className="mt-6 rounded-3xl border border-amber-400/20 bg-amber-400/[0.06] p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">
+              Selection approval unavailable
+            </p>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              {company.decision === "watch"
+                ? "This company is currently classified as Watch. It must become a Long or Short research candidate before it can be recorded."
+                : "The company listing identity is not registered for outcome tracking."}
+            </p>
+          </section>
+        )}
+
         <section className="mt-6 grid gap-6 rounded-3xl border border-slate-700/70 bg-[#07111f] p-6 md:grid-cols-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
@@ -510,7 +580,9 @@ export default function TodayScoreCompanyReport({
                 ? "—"
                 : `${company.historicalSuccessRate}%`}
             </p>
-            <p className="mt-1 text-xs text-slate-500">Development success rate</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Development success rate
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
@@ -519,21 +591,28 @@ export default function TodayScoreCompanyReport({
             <p className="mt-3 text-4xl font-black text-white">
               {company.completedOutcomes}
             </p>
-            <p className="mt-1 text-xs text-slate-500">Recorded development outcomes</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Recorded development outcomes
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
               What went wrong?
             </p>
-            <p className="mt-3 text-lg font-black text-amber-200">Ready to connect</p>
+            <p className="mt-3 text-lg font-black text-amber-200">
+              Ready to connect
+            </p>
             <p className="mt-2 text-xs leading-5 text-slate-500">
-              Failed-outcome explanations will appear here when the live outcome repository is connected to companies.
+              Failed-outcome explanations will appear here when the live outcome
+              repository is connected to companies.
             </p>
           </div>
         </section>
 
         <p className="mt-6 text-xs leading-5 text-slate-600">
-          TodayScore and decision labels are research classifications, not trade instructions. Company figures and historical rates on this page are development data.
+          TodayScore and decision labels are research classifications, not trade
+          instructions. Company figures and historical rates on this page are
+          development data.
         </p>
       </div>
     </div>

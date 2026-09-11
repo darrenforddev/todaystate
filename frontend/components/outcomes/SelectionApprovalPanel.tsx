@@ -38,6 +38,7 @@ interface SelectionCandidate {
 
 interface SelectionApprovalPanelProps {
   candidate: SelectionCandidate;
+  initialDecision?: SelectionDecision;
   onRecorded?: (record: SelectionOutcomeRecord) => void;
 }
 
@@ -99,13 +100,17 @@ function formatPriceInput(value: number): string {
 
 export default function SelectionApprovalPanel({
   candidate,
+  initialDecision = "long",
   onRecorded,
 }: SelectionApprovalPanelProps) {
   const defaultBenchmarkId = getDefaultBenchmarkId(candidate.exchangeMic);
 
   const defaultBenchmark = getSelectionBenchmark(defaultBenchmarkId)!;
 
-  const [decision, setDecision] = useState<SelectionDecision>("long");
+  const [decision, setDecision] =
+    useState<SelectionDecision>(
+      initialDecision,
+    );
 
   const [selectedAt, setSelectedAt] = useState(getTodayDate);
 
@@ -130,7 +135,7 @@ export default function SelectionApprovalPanel({
   const initialDraft = buildSelectionApprovalDraft({
     ticker: candidate.ticker,
     companyName: candidate.companyName,
-    decision: "long",
+    decision: initialDecision,
     todayScore: candidate.todayScore,
     qualityScore: candidate.qualityScore,
     valueScore: candidate.valueScore,
